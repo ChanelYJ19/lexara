@@ -22,7 +22,7 @@ from lexara import LexaraClient
 
 client = LexaraClient(api_key="dev-local-key")
 
-result = client.readability.adjust(
+result = client.readability.rewrite(
     "Photosynthesis converts light energy into chemical energy...",
     target_grade=6,
 )
@@ -226,21 +226,49 @@ curl -s http://localhost:8000/v1/readability/rewrite \
 ## Python SDK
 
 ```python
-from lexara import LexaraClient
+from lexara import LexaraClient, Tone
 
-client = LexaraClient(api_key="...")
+client = LexaraClient(api_key="...", timeout=120, max_retries=2)
 
-# Core workflow (preferred)
-result = client.readability.adjust(text, target_grade=5)
+# Hero workflow — rewrite to target grade with before/after proof
+result = client.readability.rewrite(
+    text,
+    target_grade=5,
+    preserve_meaning=True,
+    tone=Tone.friendly,
+    max_passes=4,
+)
 
-# Equivalent
-result = client.readability.rewrite(text, target_grade=5)
-
-# Score only — pair with adjust() when text needs changing
-scores = client.readability.score(text)
+# Score only — diagnostics without rewriting
+scores = client.readability.score(text, frameworks=["flesch_kincaid", "lexile"])
 ```
 
-`adjust()` returns typed `RewriteResponse` with:
+**Examples:** `examples/sdk_score_only.py`, `examples/sdk_rewrite_to_target.py`, `examples/sdk_rewrite_inspect_scores.py`
+
+### Rewrite options
+
+| Parameter | Default | Meaning |
+|-----------|---------|---------|
+| `target_grade` | required | Desired US grade level (1–16) |
+| `preserve_meaning` | `True` | Keep facts, numbers, names, steps |
+| `tone` | `neutral` | `Tone.friendly`, `formal`, `playful`, `academic`, … |
+| `max_passes` | `3` | Max rewrite → rescore iterations |
+| `frameworks` | all | Frameworks used to judge progress |
+| `tolerance` | `1.0` | Grade levels within target = hit |
+
+Or pass a :class:`~lexara.options.RewriteOptions` dataclass via ``options=``.
+
+### Exceptions
+
+| Exception | When |
+|-----------|------|
+| `AuthenticationError` | Invalid API key (401) |
+| `ValidationError` | Bad request params (422) |
+| `LexaraTimeoutError` | Request timed out |
+| `LexaraConnectionError` | Network failure |
+| `LexaraAPIError` | Other API errors |
+
+`rewrite()` returns typed `RewriteResponse` with:
 
 | Field | Meaning |
 |-------|---------|
