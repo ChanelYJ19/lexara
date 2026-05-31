@@ -27,6 +27,11 @@ class EvalSample(BaseModel):
     target_grade: float = Field(..., ge=1, le=16)
     tolerance: float = Field(default=1.0, ge=0, le=4)
     max_passes: int = Field(default=4, ge=1, le=10)
+    min_grade_reduction: float | None = Field(
+        default=None,
+        description="Optional mock-eval threshold: minimum grade levels easier after rewrite.",
+    )
+    expect_moved_toward_target: bool = True
 
 
 class EvalDataset(BaseModel):

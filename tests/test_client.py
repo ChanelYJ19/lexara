@@ -70,9 +70,15 @@ def test_sdk_rewrite_accepts_tone_and_options(sdk):
     assert result.execution.passes_used <= 2
 
 
-def test_sdk_adjust_aliases_rewrite(sdk):
-    rewrite = sdk.readability.rewrite(COMPLEX, target_grade=5, max_passes=2)
-    adjust = sdk.readability.adjust(COMPLEX, target_grade=5, max_passes=2)
+def test_sdk_adjust_emits_deprecation_warning(sdk):
+    with pytest.warns(DeprecationWarning, match="adjust\\(\\) is deprecated"):
+        sdk.readability.adjust(COMPLEX, target_grade=5, max_passes=2)
+
+
+def test_sdk_adjust_still_calls_rewrite(sdk):
+    with pytest.warns(DeprecationWarning):
+        rewrite = sdk.readability.rewrite(COMPLEX, target_grade=5, max_passes=2)
+        adjust = sdk.readability.adjust(COMPLEX, target_grade=5, max_passes=2)
     assert rewrite.outcome.estimated_grade_to == adjust.outcome.estimated_grade_to
 
 

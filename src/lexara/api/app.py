@@ -17,8 +17,19 @@ from lexara.services.scoring_service import ScoringService
 logger = get_logger(__name__)
 
 
+def _validate_provider_settings(settings: Settings) -> None:
+    if settings.llm_provider.lower() != "mock":
+        return
+    if settings.env.lower() == "production" and not settings.allow_mock_provider:
+        raise RuntimeError(
+            "LEXARA_LLM_PROVIDER=mock is not allowed when LEXARA_ENV=production "
+            "and LEXARA_ALLOW_MOCK_PROVIDER=false. Use openai for external alpha."
+        )
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
+    _validate_provider_settings(settings)
     configure_logging(settings.log_level)
 
     app = FastAPI(

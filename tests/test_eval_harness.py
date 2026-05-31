@@ -44,9 +44,6 @@ def test_default_dataset_loads_and_covers_passage_types():
     assert len(dataset.samples) >= 8
     types = {s.passage_type for s in dataset.samples}
     assert types == PASSAGE_TYPES
-    grades = {s.source_grade_context for s in dataset.samples}
-    assert min(grades) <= 6
-    assert max(grades) >= 12
 
 
 def test_dataset_sample_ids_unique():

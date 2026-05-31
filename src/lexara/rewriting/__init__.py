@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from lexara.rewriting.pipeline import RewriteOutcome
+    from lexara.rewriting.pipeline import PipelineOutcome
     from lexara.rewriting.providers.base import LLMProvider
     from lexara.rewriting.providers.mock import MockLLMProvider
 
 __all__ = [
-    "RewriteOutcome",
+    "PipelineOutcome",
     "run_rewrite",
     "LLMProvider",
     "MockLLMProvider",
@@ -19,10 +19,10 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    if name == "RewriteOutcome":
-        from lexara.rewriting.pipeline import RewriteOutcome
+    if name == "PipelineOutcome":
+        from lexara.rewriting.pipeline import PipelineOutcome
 
-        return RewriteOutcome
+        return PipelineOutcome
     if name == "run_rewrite":
         from lexara.rewriting.pipeline import run_rewrite
 

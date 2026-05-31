@@ -69,6 +69,7 @@ def test_recovers_after_transient_failure():
     )
     assert result.execution.warnings[0].code == "provider_transient_error"
     assert result.rewritten_text != TEXT
+    assert result.execution.degraded is False
     assert result.execution.provider_calls_failed == 1
     assert result.execution.passes_used >= 1
     assert result.execution.provider_calls_attempted == 2

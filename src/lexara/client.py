@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+import warnings
 from typing import Any
 
 import httpx
@@ -85,7 +86,12 @@ class Readability:
         target_grade: float,
         **kwargs: Any,
     ) -> RewriteResponse:
-        """Alias for :meth:`rewrite` — same rewrite-to-target-grade workflow."""
+        """Deprecated alias for :meth:`rewrite`. Prefer ``rewrite()``."""
+        warnings.warn(
+            "readability.adjust() is deprecated; use readability.rewrite()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.rewrite(text, target_grade, **kwargs)
 
     def score(

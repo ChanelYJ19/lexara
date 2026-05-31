@@ -44,6 +44,8 @@ cp .env.example .env
 lexara-api   # → http://localhost:8000/docs
 ```
 
+> **Alpha note:** Default `LEXARA_LLM_PROVIDER=mock` is for **local dev and tests only**. It uses word substitution, not an LLM — expect low `hit_target` on hard passages. **External demos and alpha require `openai`.** Run `python examples/demo_showcase.py` to see a mock warning banner when the API uses mock.
+
 ### 1. Rewrite (curl) — start here
 
 ```bash
@@ -97,7 +99,9 @@ Use `POST /v1/readability/score` for diagnostics. Use `rewrite` when you need to
 
 ## Demo-ready examples
 
-Three passages you can run in a customer call, Show HN thread, or live demo. All work with the local mock provider (no API spend).
+Three passages you can run in a customer call, Show HN thread, or live demo.
+
+> **Mock provider:** Demos against local `lexara-api` with default settings use mock. Rewrite quality is not production-representative. For customer-facing demos set `LEXARA_LLM_PROVIDER=openai`.
 
 ### Demo A — Science passage: college → grade 6
 
@@ -262,7 +266,9 @@ Each `POST /v1/readability/rewrite` request:
 3. Otherwise **rewrite → rescore → retry** up to `max_passes`
 4. Returns the best attempt with full before/after snapshots
 
-Provider failures become `execution.warnings` — the endpoint returns 200 with the best text so far. Check `outcome.hit_target` and `execution.degraded` before shipping to users.
+Provider failures become `execution.warnings` — the endpoint returns 200 with the best text so far. Check `outcome.hit_target` before shipping to users.
+
+`execution.degraded` means **no usable rewrite was produced** (e.g. all provider calls failed). Warnings alone do not set `degraded` when a rewrite succeeded.
 
 ---
 
@@ -298,7 +304,9 @@ See `.env.example`.
 
 | Var | Default | Meaning |
 |-----|---------|---------|
-| `LEXARA_LLM_PROVIDER` | `mock` | `mock` (local/dev) or `openai` (real rewrites) |
+| `LEXARA_ENV` | `development` | `development` or `production` |
+| `LEXARA_ALLOW_MOCK_PROVIDER` | `true` | Set `false` with `LEXARA_ENV=production` to block mock |
+| `LEXARA_LLM_PROVIDER` | `mock` | `mock` (dev/test) or `openai` (external alpha) |
 | `LEXARA_OPENAI_API_KEY` | – | Required when provider is `openai` |
 | `LEXARA_OPENAI_MODEL` | `gpt-4o-mini` | Chat model for rewrites |
 | `LEXARA_API_KEYS` | `dev-local-key` | Valid API keys |
@@ -357,6 +365,20 @@ Use this flow in a customer call or Show HN live demo:
 6. **Ship check (30s)** — Point at `outcome.hit_target`, `execution.warnings`, and the safe-claims table. *"You decide when to ship; Lexara gives you structured proof."*
 
 Runnable: `python examples/demo_showcase.py`
+
+---
+
+## Alpha release checklist
+
+Before any external demo or alpha customer:
+
+- [ ] `LEXARA_LLM_PROVIDER=openai` and `LEXARA_OPENAI_API_KEY` set
+- [ ] `LEXARA_ENV=production` and `LEXARA_ALLOW_MOCK_PROVIDER=false` (optional guard)
+- [ ] `lexara-eval --provider openai --output eval/results-openai.json` — review `hit_target` rate
+- [ ] Manual semantic review on Demo A/B/C (`python examples/demo_showcase.py`)
+- [ ] `pytest -m integration` with live OpenAI key
+- [ ] Safe-claims table reviewed in customer-facing materials
+- [ ] Confirm `execution.degraded` vs `execution.warnings` behavior with integrators
 
 ---
 

@@ -35,11 +35,15 @@ class ScoringService:
     def __init__(self, registry: FrameworkRegistry | None = None) -> None:
         self._registry = registry or get_registry()
 
-    def _prepare(self, text: str, frameworks: list[str] | None):
+    def validate_frameworks(self, frameworks: list[str] | None) -> None:
         try:
-            selected = self._registry.resolve(frameworks)
+            self._registry.resolve(frameworks)
         except KeyError as exc:
             raise UnknownFrameworkError(exc.args[0]) from exc
+
+    def _prepare(self, text: str, frameworks: list[str] | None):
+        self.validate_frameworks(frameworks)
+        selected = self._registry.resolve(frameworks)
         stats = compute_stats(text)
         if stats.word_count == 0:
             raise UnscoreableTextError(

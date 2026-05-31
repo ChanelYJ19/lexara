@@ -22,6 +22,14 @@ class Settings(BaseSettings):
     api_keys: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["dev-local-key"]
     )
+    env: str = Field(
+        default="development",
+        description="deployment environment: development | production",
+    )
+    allow_mock_provider: bool = Field(
+        default=True,
+        description="Allow LEXARA_LLM_PROVIDER=mock (dev/test). Set false in production.",
+    )
     llm_provider: str = "mock"
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"

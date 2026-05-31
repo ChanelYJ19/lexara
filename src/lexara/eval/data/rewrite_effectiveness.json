@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Representative K-12 educational passages for rewrite effectiveness evals.",
+  "description": "Canonical K-12 rewrite effectiveness dataset (eval harness + pytest thresholds).",
   "samples": [
     {
       "source_id": "g2_explanation_weather",
@@ -25,9 +25,22 @@
       "passage_type": "science",
       "source_grade_context": 10,
       "text": "Photosynthesis is the biochemical process by which chlorophyll-containing organisms convert light energy into chemical energy, subsequently producing glucose and releasing oxygen as a byproduct of cellular metabolism.",
-      "target_grade": 5,
+      "target_grade": 6,
       "tolerance": 1.5,
-      "max_passes": 5
+      "max_passes": 5,
+      "min_grade_reduction": 3.0,
+      "expect_moved_toward_target": true
+    },
+    {
+      "source_id": "g4_worksheet_instructions",
+      "passage_type": "instructions",
+      "source_grade_context": 7,
+      "text": "Students will subsequently utilize the provided manipulatives to demonstrate their comprehension of fractional equivalence, and they must obtain sufficient evidence before completing the assessment.",
+      "target_grade": 4,
+      "tolerance": 1.5,
+      "max_passes": 4,
+      "min_grade_reduction": 4.0,
+      "expect_moved_toward_target": true
     },
     {
       "source_id": "g6_social_studies_government",
@@ -43,9 +56,22 @@
       "passage_type": "worksheet",
       "source_grade_context": 7,
       "text": "- Identify equivalent fractions using the provided visual models.\n- Demonstrate your comprehension by simplifying each fraction to lowest terms.\n- Utilize appropriate vocabulary when explaining your reasoning.",
-      "target_grade": 4,
-      "tolerance": 1.0,
-      "max_passes": 4
+      "target_grade": 5,
+      "tolerance": 1.5,
+      "max_passes": 4,
+      "min_grade_reduction": 1.0,
+      "expect_moved_toward_target": true
+    },
+    {
+      "source_id": "g9_social_studies_economics",
+      "passage_type": "social_studies",
+      "source_grade_context": 13,
+      "text": "The multifaceted ramifications of macroeconomic policy interventions necessitate comprehensive interdisciplinary analysis before implementation across heterogeneous institutional environments.",
+      "target_grade": 5,
+      "tolerance": 2.0,
+      "max_passes": 5,
+      "min_grade_reduction": 5.0,
+      "expect_moved_toward_target": true
     },
     {
       "source_id": "g7_explanation_grammar",
@@ -63,15 +89,6 @@
       "text": "Energy flows through ecosystems via trophic levels, beginning with primary producers that convert solar radiation into chemical energy, which is subsequently transferred to consumers through ingestion and metabolic processes.",
       "target_grade": 8,
       "tolerance": 1.5,
-      "max_passes": 5
-    },
-    {
-      "source_id": "g9_social_studies_economics",
-      "passage_type": "social_studies",
-      "source_grade_context": 13,
-      "text": "The multifaceted ramifications of macroeconomic policy interventions necessitate comprehensive interdisciplinary analysis before implementation across heterogeneous institutional environments.",
-      "target_grade": 9,
-      "tolerance": 2.0,
       "max_passes": 5
     },
     {

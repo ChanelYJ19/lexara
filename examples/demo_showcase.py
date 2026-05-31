@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Demo showcase — three rewrite scenarios for customer calls or Show HN.
 
-Run with the API up (lexara-api) or against the in-process mock via local install.
+Run with the API up (lexara-api):
 
     python examples/demo_showcase.py
 """
 
 from __future__ import annotations
+
+import sys
 
 from lexara import LexaraClient, Tone
 
@@ -27,11 +29,25 @@ DEMO_C_ALREADY = (
     "Plants need sun and water to grow."
 )
 
+MOCK_WARNING = """
+╔══════════════════════════════════════════════════════════════════╗
+║  WARNING: API is using the mock LLM provider (dev/test only).   ║
+║  Rewrite quality is NOT representative of production.            ║
+║  External demos require LEXARA_LLM_PROVIDER=openai + API key.    ║
+╚══════════════════════════════════════════════════════════════════╝
+"""
+
 
 def _banner(title: str) -> None:
     print("\n" + "=" * 60)
     print(title)
     print("=" * 60)
+
+
+def _warn_if_mock(client: LexaraClient) -> None:
+    health = client.health()
+    if health.get("llm_provider") == "mock":
+        print(MOCK_WARNING, file=sys.stderr)
 
 
 def demo_a_science(client: LexaraClient) -> None:
@@ -42,7 +58,10 @@ def demo_a_science(client: LexaraClient) -> None:
         max_passes=5,
         tolerance=1.5,
     )
-    print(f"Grade:  {r.input.estimated_grade_level} → {r.output.estimated_grade_level} (target {r.target.grade})")
+    print(
+        f"Grade:  {r.input.estimated_grade_level} → {r.output.estimated_grade_level} "
+        f"(target {r.target.grade})"
+    )
     print(f"Hit:    {r.hit_target}")
     print(f"Proof:  {', '.join(r.outcome.frameworks_improved) or 'none'}")
     print(f"\n{r.outcome.summary}")
@@ -79,6 +98,7 @@ def demo_c_already_at_target(client: LexaraClient) -> None:
 def main() -> None:
     client = LexaraClient(api_key="dev-local-key", base_url="http://localhost:8000")
     try:
+        _warn_if_mock(client)
         demo_a_science(client)
         demo_b_worksheet(client)
         demo_c_already_at_target(client)

@@ -11,7 +11,7 @@ from lexara.models.rewrite import (
     RewriteTarget,
 )
 from lexara.models.scoring import FrameworkScore
-from lexara.rewriting.pipeline import RewriteOutcome as PipelineOutcome
+from lexara.rewriting.pipeline import PipelineOutcome
 from lexara.scoring.interpret import grade_band
 
 

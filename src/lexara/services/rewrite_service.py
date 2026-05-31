@@ -20,6 +20,8 @@ class RewriteService:
         self._scoring = scoring_service
 
     def rewrite(self, req: RewriteRequest) -> RewriteResponse:
+        self._scoring.validate_frameworks(req.frameworks)
+
         def scorer(text: str):
             return self._scoring.score_frameworks(text, req.frameworks)
 

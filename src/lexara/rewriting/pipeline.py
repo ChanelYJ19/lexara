@@ -20,7 +20,9 @@ Scorer = Callable[[str], tuple[list[FrameworkScore], float]]
 
 
 @dataclass
-class RewriteOutcome:
+class PipelineOutcome:
+    """Internal rewrite pipeline result before API response assembly."""
+
     rewritten_text: str
     original_scores: list[FrameworkScore]
     rewritten_scores: list[FrameworkScore]
@@ -49,6 +51,7 @@ def _score_text(
     *,
     warnings: list[RewriteWarning],
     pass_number: int | None,
+    phase: str = "rescore",
 ) -> tuple[list[FrameworkScore], float] | None:
     try:
         return scorer(text)
@@ -58,7 +61,7 @@ def _score_text(
                 code="unscoreable_text",
                 message=str(exc),
                 pass_number=pass_number,
-                details={"phase": "rescore"},
+                details={"phase": phase},
             )
         )
         return None
@@ -68,7 +71,7 @@ def _score_text(
                 code="scoring_failed",
                 message=f"Scoring failed: {exc}",
                 pass_number=pass_number,
-                details={"exception": type(exc).__name__},
+                details={"exception": type(exc).__name__, "phase": phase},
             )
         )
         return None
@@ -84,13 +87,15 @@ def run_rewrite(
     tolerance: float,
     provider: LLMProvider,
     scorer: Scorer,
-) -> RewriteOutcome:
+) -> PipelineOutcome:
     warnings: list[RewriteWarning] = []
     history: list[dict] = []
 
-    original = _score_text(scorer, text, warnings=warnings, pass_number=None)
+    original = _score_text(
+        scorer, text, warnings=warnings, pass_number=None, phase="original"
+    )
     if original is None:
-        return RewriteOutcome(
+        return PipelineOutcome(
             rewritten_text=text,
             original_scores=[],
             rewritten_scores=[],
@@ -107,7 +112,6 @@ def run_rewrite(
 
     original_scores, original_grade = original
 
-    # Already at target — skip LLM, return scored original unchanged.
     if _within_target(original_grade, target_grade, tolerance):
         history.append(
             {
@@ -117,7 +121,7 @@ def run_rewrite(
                 "target": target_grade,
             }
         )
-        return RewriteOutcome(
+        return PipelineOutcome(
             rewritten_text=text,
             original_scores=original_scores,
             rewritten_scores=original_scores,
@@ -215,11 +219,9 @@ def run_rewrite(
             break
 
     hit_target = _within_target(best_grade, target_grade, tolerance)
-    degraded = bool(warnings) or (
-        provider_attempts > 0 and not any_successful_rewrite and not hit_target
-    )
+    degraded = provider_attempts > 0 and not any_successful_rewrite and not hit_target
 
-    return RewriteOutcome(
+    return PipelineOutcome(
         rewritten_text=best_text,
         original_scores=original_scores,
         rewritten_scores=best_scores,
