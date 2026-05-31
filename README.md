@@ -350,6 +350,60 @@ LEXARA_OPENAI_API_KEY=sk-... pytest tests/test_openai_contract.py::test_openai_r
 
 ---
 
+## Rewrite effectiveness evals
+
+Lightweight harness to learn what works in customer demos — **rewrite quality**, not just scoring formulas.
+
+For each sample in `src/lexara/eval/data/rewrite_effectiveness.json` the harness runs:
+
+1. **Original score** — multi-framework grade estimate  
+2. **Rewrite** — toward the sample's target grade  
+3. **Rewritten score** — verification after rewrite  
+
+Each row includes: `source_id`, `source_grade_estimate`, `target_grade`, `rewritten_grade_estimate`, `hit_target`, `attempts_used`, `delta`, and an empty `semantic_preservation_notes` field for manual meaning-preservation review after demos.
+
+The dataset covers grades 2–12 across passage types: explanation, instructions, science, social studies, and worksheet-style text.
+
+### Run locally (mock — free, deterministic)
+
+```bash
+pip install -e ".[dev]"
+
+# Table summary to stdout
+lexara-eval
+
+# Save JSON for review / sharing
+lexara-eval --format both --output eval/results.json
+
+# Equivalent module invocation
+python -m lexara.eval.runner --provider mock --output eval/results.json
+```
+
+### Run with OpenAI before a demo
+
+```bash
+pip install -e ".[openai,dev]"
+export LEXARA_OPENAI_API_KEY=sk-...
+export LEXARA_LLM_PROVIDER=openai
+
+lexara-eval --provider openai --format both --output eval/results-openai.json
+```
+
+After the run, fill in `semantic_preservation_notes` in the JSON for passages you reviewed (facts kept? steps intact?).
+
+### Programmatic use
+
+```python
+from lexara.eval import load_dataset, run_eval
+from lexara.rewriting.providers.mock import MockLLMProvider
+
+summary = run_eval(load_dataset(), provider=MockLLMProvider())
+for row in summary.results:
+    print(row.source_id, row.delta, row.hit_target)
+```
+
+---
+
 ## Safe customer claims
 
 **Say:** rewrite to target grade with multi-framework before/after proof; developer-friendly SDK.
@@ -381,6 +435,7 @@ LEXARA_OPENAI_API_KEY=sk-... pytest tests/test_openai_contract.py::test_openai_r
 | `services/` | Rewrite + scoring orchestration |
 | `scoring/` | Pure readability formulas |
 | `rewriting/` | LLM provider + rewrite/rescore pipeline |
+| `eval/` | Rewrite effectiveness eval harness + K-12 demo dataset |
 | `client.py` | Typed Python SDK |
 
 ---
@@ -389,6 +444,7 @@ LEXARA_OPENAI_API_KEY=sk-... pytest tests/test_openai_contract.py::test_openai_r
 
 ```bash
 pytest                                    # full suite (mock provider, no network)
+pytest tests/test_eval_harness.py -v      # rewrite effectiveness eval harness
 pytest tests/test_canonical_examples.py   # validate canonical JSON payloads
 pytest tests/test_rewrite_workflow_alpha.py -v
 pytest tests/test_rewrite_effectiveness.py -v

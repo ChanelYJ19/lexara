@@ -28,6 +28,7 @@ openai = ["openai>=1.30"]
 
 [project.scripts]
 lexara-api = "lexara.api.app:run"
+lexara-eval = "lexara.eval.runner:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lexara"]
