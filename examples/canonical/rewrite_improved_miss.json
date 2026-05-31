@@ -1,0 +1,139 @@
+{
+  "request": {
+    "text": "The committee will subsequently utilize numerous additional resources to facilitate the comprehensive demonstration, and they will require approximately seven days to obtain sufficient data because the analysis is fundamentally complex.",
+    "target_grade": 2.0,
+    "preserve_meaning": true,
+    "tone": "neutral",
+    "max_passes": 3,
+    "frameworks": null,
+    "tolerance": 0.5
+  },
+  "response": {
+    "request_id": null,
+    "input": {
+      "text": "The committee will subsequently utilize numerous additional resources to facilitate the comprehensive demonstration, and they will require approximately seven days to obtain sufficient data because the analysis is fundamentally complex.",
+      "estimated_grade_level": 18.6,
+      "grade_band": "College+",
+      "frameworks": [
+        {
+          "framework": "flesch_kincaid",
+          "raw_score": 24.04,
+          "grade_band": "College+",
+          "estimated_grade_level": 24.0,
+          "confidence": "exact",
+          "confidence_note": "Standard Flesch-Kincaid Grade formula. Syllable counts are estimated separately in stats.syllable_estimate.",
+          "interpretation": "reading level ~grade 24; comfortable for college-level readers.",
+          "unit": "grade"
+        },
+        {
+          "framework": "dale_chall",
+          "raw_score": 14.07,
+          "grade_band": "College",
+          "estimated_grade_level": 14.0,
+          "confidence": "estimated",
+          "confidence_note": "Uses the published Dale-Chall formula and grade mapping, but 'difficult words' are measured against an approximate familiar-word list, not the official licensed 3,000-word list.",
+          "interpretation": "Estimated reading level ~grade 14; comfortable for college-level readers.",
+          "unit": "dale_chall"
+        },
+        {
+          "framework": "atos_estimated",
+          "raw_score": 20.43,
+          "grade_band": "College+",
+          "estimated_grade_level": 20.4,
+          "confidence": "estimated",
+          "confidence_note": "ATOS is proprietary; this is an ATOS-style estimate from sentence length, word length, and word difficulty \u2014 not an official AR level.",
+          "interpretation": "Estimated reading level ~grade 20.4; comfortable for college-level readers.",
+          "unit": "grade"
+        },
+        {
+          "framework": "lexile_estimated",
+          "raw_score": 1300.0,
+          "grade_band": "College",
+          "estimated_grade_level": 16.0,
+          "confidence": "estimated",
+          "confidence_note": "Lexile is a registered MetaMetrics measure; this is a Lexile-equivalent estimate on the L scale, not an official Lexile score.",
+          "interpretation": "Estimated reading level ~grade 16; comfortable for college-level readers.",
+          "unit": "lexile"
+        }
+      ]
+    },
+    "output": {
+      "text": "The committee will later use numerous additional resources to help the comprehensive demonstration, and they will require about seven days to obtain sufficient data because the analysis is fundamentally complex.",
+      "estimated_grade_level": 17.0,
+      "grade_band": "College+",
+      "frameworks": [
+        {
+          "framework": "flesch_kincaid",
+          "raw_score": 19.71,
+          "grade_band": "College+",
+          "estimated_grade_level": 19.7,
+          "confidence": "exact",
+          "confidence_note": "Standard Flesch-Kincaid Grade formula. Syllable counts are estimated separately in stats.syllable_estimate.",
+          "interpretation": "reading level ~grade 19.7; comfortable for college-level readers.",
+          "unit": "grade"
+        },
+        {
+          "framework": "dale_chall",
+          "raw_score": 12.49,
+          "grade_band": "College",
+          "estimated_grade_level": 14.0,
+          "confidence": "estimated",
+          "confidence_note": "Uses the published Dale-Chall formula and grade mapping, but 'difficult words' are measured against an approximate familiar-word list, not the official licensed 3,000-word list.",
+          "interpretation": "Estimated reading level ~grade 14; comfortable for college-level readers.",
+          "unit": "dale_chall"
+        },
+        {
+          "framework": "atos_estimated",
+          "raw_score": 18.37,
+          "grade_band": "College+",
+          "estimated_grade_level": 18.4,
+          "confidence": "estimated",
+          "confidence_note": "ATOS is proprietary; this is an ATOS-style estimate from sentence length, word length, and word difficulty \u2014 not an official AR level.",
+          "interpretation": "Estimated reading level ~grade 18.4; comfortable for college-level readers.",
+          "unit": "grade"
+        },
+        {
+          "framework": "lexile_estimated",
+          "raw_score": 1300.0,
+          "grade_band": "College",
+          "estimated_grade_level": 16.0,
+          "confidence": "estimated",
+          "confidence_note": "Lexile is a registered MetaMetrics measure; this is a Lexile-equivalent estimate on the L scale, not an official Lexile score.",
+          "interpretation": "Estimated reading level ~grade 16; comfortable for college-level readers.",
+          "unit": "lexile"
+        }
+      ]
+    },
+    "target": {
+      "grade": 2.0,
+      "tolerance": 0.5,
+      "grade_band": "2-3"
+    },
+    "outcome": {
+      "estimated_grade_from": 18.6,
+      "estimated_grade_to": 17.0,
+      "grade_change": -1.6,
+      "target_grade": 2.0,
+      "hit_target": false,
+      "distance_from_target": 15.0,
+      "moved_toward_target": true,
+      "frameworks_improved": [
+        "flesch_kincaid",
+        "atos_estimated"
+      ],
+      "summary": "Improved from grade 18.6 toward target 2 (now 17). Target not met \u2014 try more passes or wider tolerance."
+    },
+    "execution": {
+      "passes_used": 3,
+      "provider": "gradual",
+      "skipped": false,
+      "skip_reason": null,
+      "provider_calls_attempted": 3,
+      "provider_calls_failed": 0,
+      "warnings": [],
+      "degraded": false
+    },
+    "rewritten_text": "The committee will later use numerous additional resources to help the comprehensive demonstration, and they will require about seven days to obtain sufficient data because the analysis is fundamentally complex.",
+    "hit_target": false
+  }
+}

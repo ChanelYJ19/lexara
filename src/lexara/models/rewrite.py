@@ -1,10 +1,10 @@
-"""Request/response schemas for the rewrite endpoint — Lexara's core workflow."""
+"""Request/response schemas for rewrite-to-target-grade — Lexara's core workflow."""
 
 from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from lexara.models.scoring import FrameworkScore
 
@@ -18,23 +18,41 @@ class Tone(str, Enum):
 
 
 class RewriteRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=50_000)
+    """Rewrite a passage to a target US grade level; multi-framework scores verify each pass."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "text": (
+                        "Photosynthesis is the biochemical process by which chlorophyll-containing "
+                        "organisms convert light energy into chemical energy."
+                    ),
+                    "target_grade": 6,
+                    "preserve_meaning": True,
+                    "max_passes": 5,
+                }
+            ]
+        }
+    )
+
+    text: str = Field(..., min_length=1, max_length=50_000, description="Passage to rewrite.")
     target_grade: float = Field(
-        ..., ge=1, le=16, description="Desired US grade level (1-16)."
+        ..., ge=1, le=16, description="Desired US grade level (1–16)."
     )
     preserve_meaning: bool = Field(
-        default=True, description="Instruct the model to keep the original meaning."
+        default=True, description="Keep facts, numbers, names, and steps intact."
     )
     tone: Tone = Tone.neutral
     max_passes: int = Field(
-        default=3, ge=1, le=10, description="Max rewrite/rescore iterations."
+        default=3, ge=1, le=10, description="Max rewrite → rescore iterations."
     )
     frameworks: list[str] | None = Field(
         default=None,
-        description="Frameworks used to judge progress toward the target (defaults all).",
+        description="Frameworks used to judge progress (defaults to all supported).",
     )
     tolerance: float = Field(
-        default=1.0, ge=0, le=4, description="Grade levels within target counts as hit."
+        default=1.0, ge=0, le=4, description="Grade levels within target counts as a hit."
     )
 
 
@@ -45,91 +63,100 @@ class RewriteWarning(BaseModel):
     details: dict | None = None
 
 
-class ReadabilitySnapshot(BaseModel):
-    """Text plus multi-framework scores at a point in the rewrite workflow."""
+class PassageSnapshot(BaseModel):
+    """One side of the rewrite transformation, with per-framework verification scores."""
 
     text: str
-    aggregate_grade_level: float = Field(
+    estimated_grade_level: float = Field(
         ..., description="Mean grade level across selected frameworks."
     )
     grade_band: str
-    scores: list[FrameworkScore]
+    frameworks: list[FrameworkScore] = Field(
+        ..., description="Per-framework scores proving readability at this step."
+    )
 
 
-class RewriteTargetResult(BaseModel):
+class RewriteTarget(BaseModel):
+    """Grade goal the rewrite was aimed at."""
+
     grade: float
     tolerance: float
-    hit_target: bool
-    distance_from_target: float = Field(
-        ..., description="Absolute grade levels away after rewrite."
+    grade_band: str
+
+
+class RewriteOutcome(BaseModel):
+    """Verification layer — did the rewrite reach the target grade?"""
+
+    estimated_grade_from: float = Field(
+        ..., description="Aggregate grade before rewrite (same as input.estimated_grade_level)."
     )
-    target_grade_band: str
-
-
-class RewriteImprovement(BaseModel):
-    """Before/after grade movement relative to the target."""
-
-    grade_level_before: float
-    grade_level_after: float
-    grade_level_change: float = Field(
-        ..., description="after − before (negative means easier to read)."
+    estimated_grade_to: float = Field(
+        ..., description="Aggregate grade after rewrite (same as output.estimated_grade_level)."
+    )
+    grade_change: float = Field(
+        ..., description="estimated_grade_to − estimated_grade_from (negative = easier)."
     )
     target_grade: float
+    hit_target: bool
+    distance_from_target: float = Field(
+        ..., description="Absolute grade levels away from target after rewrite."
+    )
     moved_toward_target: bool
-    summary: str = Field(..., description="Plain-language outcome for logs and UI.")
+    frameworks_improved: list[str] = Field(
+        default_factory=list,
+        description="Frameworks whose grade estimate moved closer to the target.",
+    )
+    summary: str = Field(..., description="Plain-language before → after outcome.")
 
 
-class RewritePipelineInfo(BaseModel):
-    passes_used: int
+class RewriteExecution(BaseModel):
+    """How the rewrite pipeline ran (provider, passes, warnings)."""
+
+    passes_used: int = Field(
+        ..., description="Rewrite → rescore loops that completed (0 if skipped)."
+    )
     provider: str
-    provider_passes_attempted: int
-    provider_passes_failed: int = 0
+    skipped: bool = Field(
+        default=False, description="True when input was already at target — no LLM call."
+    )
+    skip_reason: str | None = Field(
+        default=None, description="e.g. already_at_target when rewrite was not needed."
+    )
+    provider_calls_attempted: int = Field(
+        ..., description="LLM calls attempted (includes failures)."
+    )
+    provider_calls_failed: int = 0
     warnings: list[RewriteWarning] = Field(default_factory=list)
     degraded: bool = False
-
-
-class RewriteDelta(BaseModel):
-    """Compact delta block (mirrors ``improvement`` + pipeline pass counts)."""
-
-    grade_level_before: float
-    grade_level_after: float
-    grade_level_change: float
-    passes_used: int
-    provider_passes_attempted: int
-    provider_passes_failed: int = 0
 
 
 class RewriteResponse(BaseModel):
-    """Score → rewrite → rescore result with explicit before/after snapshots."""
+    """Rewrite-to-target-grade result: input passage, rewritten output, and scored proof."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "description": (
+                "Primary Lexara response. Read input → output for the transformation; "
+                "read outcome for hit/miss and frameworks_improved; read execution for pipeline details."
+            )
+        }
+    )
 
     request_id: str | None = None
-
-    # Primary workflow objects (use these in product UI)
-    before: ReadabilitySnapshot
-    after: ReadabilitySnapshot
-    target: RewriteTargetResult
-    improvement: RewriteImprovement
-    pipeline: RewritePipelineInfo
-
-    # Denormalized shortcuts for SDK ergonomics
-    original_text: str
-    rewritten_text: str
-    target_grade: float
-    hit_target: bool
-    original_scores: list[FrameworkScore]
-    rewritten_scores: list[FrameworkScore]
-    provider: str
-    warnings: list[RewriteWarning] = Field(default_factory=list)
-    degraded: bool = False
+    input: PassageSnapshot
+    output: PassageSnapshot
+    target: RewriteTarget
+    outcome: RewriteOutcome
+    execution: RewriteExecution
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def delta(self) -> RewriteDelta:
-        return RewriteDelta(
-            grade_level_before=self.improvement.grade_level_before,
-            grade_level_after=self.improvement.grade_level_after,
-            grade_level_change=self.improvement.grade_level_change,
-            passes_used=self.pipeline.passes_used,
-            provider_passes_attempted=self.pipeline.provider_passes_attempted,
-            provider_passes_failed=self.pipeline.provider_passes_failed,
-        )
+    def rewritten_text(self) -> str:
+        """Shortcut: rewritten passage (same as output.text)."""
+        return self.output.text
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def hit_target(self) -> bool:
+        """Shortcut: whether the target grade was met (same as outcome.hit_target)."""
+        return self.outcome.hit_target

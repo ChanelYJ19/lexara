@@ -16,11 +16,11 @@ def test_rewrite_happy_path(client, auth_headers):
     assert resp.status_code == 200
     body = resp.json()
     assert body["rewritten_text"]
-    assert body["target_grade"] == 5
-    assert body["before"]["scores"] and body["after"]["scores"]
-    assert body["improvement"]["grade_level_after"] <= body["improvement"]["grade_level_before"]
-    assert body["improvement"]["summary"]
-    assert body["pipeline"]["provider"] == "mock"
+    assert body["target"]["grade"] == 5
+    assert body["input"]["frameworks"] and body["output"]["frameworks"]
+    assert body["outcome"]["estimated_grade_to"] <= body["outcome"]["estimated_grade_from"]
+    assert body["outcome"]["summary"]
+    assert body["execution"]["provider"] == "mock"
 
 
 def test_rewrite_requires_api_key(client):

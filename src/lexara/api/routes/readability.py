@@ -1,4 +1,4 @@
-"""Readability endpoints — rewrite workflow first, score-only second."""
+"""Readability endpoints — rewrite-to-target-grade first, score-only second."""
 
 from __future__ import annotations
 
@@ -29,12 +29,14 @@ router = APIRouter(
 @router.post(
     "/rewrite",
     response_model=RewriteResponse,
-    summary="Score → rewrite → rescore until target grade",
+    summary="Rewrite to target grade — with scored proof",
     description=(
-        "Lexara's core workflow. Scores your text across multiple frameworks, "
-        "rewrites it toward a target grade level, rescoring after each pass until "
-        "the target is met or max_passes is reached. Returns explicit before/after "
-        "snapshots with improvement summary."
+        "**Lexara's core workflow.** Rewrites your passage toward a target US grade level, "
+        "rescoring after each pass until the target is met or `max_passes` is exhausted. "
+        "Returns `input` and `output` snapshots plus an `outcome` block (`hit_target`, "
+        "`frameworks_improved`, grade moved from → to). "
+        "See `examples/canonical/` for full request/response payloads. "
+        "Use POST /score when you only need diagnostics without rewriting."
     ),
 )
 def rewrite(
@@ -53,10 +55,11 @@ def rewrite(
 @router.post(
     "/score",
     response_model=ScoreResponse,
-    summary="Multi-framework score only",
+    summary="Score only — diagnostics without rewrite",
     description=(
-        "Score text against multiple readability frameworks in one call. "
-        "For grade-targeted rewriting with before/after scores, use POST /rewrite."
+        "Multi-framework readability score for a single passage. "
+        "When text is too hard or too easy, call **POST /rewrite** with the same text and a "
+        "`target_grade` to rewrite and prove before/after grades in one response."
     ),
 )
 def score(

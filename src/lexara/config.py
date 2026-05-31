@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     openai_timeout_seconds: float = 60.0
     openai_max_retries: int = 2
+    openai_max_completion_tokens: int = 4096
     log_level: str = "INFO"
     max_rewrite_passes: int = 5
 

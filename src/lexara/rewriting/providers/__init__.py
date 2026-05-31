@@ -19,6 +19,7 @@ def build_provider(settings: Settings) -> LLMProvider:
             model=settings.openai_model,
             timeout_seconds=settings.openai_timeout_seconds,
             max_retries=settings.openai_max_retries,
+            max_completion_tokens=settings.openai_max_completion_tokens,
         )
     raise ValueError(f"Unknown LLM provider: {settings.llm_provider!r}")
 

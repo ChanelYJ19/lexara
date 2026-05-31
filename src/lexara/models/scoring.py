@@ -1,10 +1,14 @@
-"""Request/response schemas for the scoring endpoint."""
+"""Request/response schemas for score-only diagnostics.
+
+Use POST /v1/readability/rewrite when you need to act on scores — rewrite to a
+target grade and get before/after proof in one call.
+"""
 
 from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from lexara.models.common import TextStats
 
@@ -30,6 +34,19 @@ class ScoreConfidence(str, Enum):
 
 
 class ScoreRequest(BaseModel):
+    """Score-only diagnostics. Pair with POST /rewrite to adjust text to a target grade."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "text": "The cat sat on the mat.",
+                    "frameworks": ["flesch_kincaid", "lexile_estimated"],
+                }
+            ]
+        }
+    )
+
     text: str = Field(..., min_length=1, max_length=50_000)
     frameworks: list[str] | None = Field(
         default=None,
@@ -62,6 +79,8 @@ class ScoreAggregate(BaseModel):
 
 
 class ScoreResponse(BaseModel):
+    """Multi-framework readability snapshot for one passage — verification without rewrite."""
+
     request_id: str | None = None
     stats: TextStats
     scores: list[FrameworkScore]

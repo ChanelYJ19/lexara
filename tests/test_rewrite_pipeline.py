@@ -23,24 +23,24 @@ def _service() -> RewriteService:
 def test_mock_rewrite_lowers_grade_level():
     req = RewriteRequest(text=COMPLEX, target_grade=5, max_passes=4)
     result = _service().rewrite(req)
-    assert result.improvement.grade_level_after < result.improvement.grade_level_before
-    assert result.pipeline.provider == "mock"
-    assert result.improvement.summary
+    assert result.outcome.estimated_grade_to < result.outcome.estimated_grade_from
+    assert result.execution.provider == "mock"
+    assert result.outcome.summary
 
 
 def test_rewrite_reports_target_and_passes():
     req = RewriteRequest(text=COMPLEX, target_grade=5, max_passes=3, tolerance=1.5)
     result = _service().rewrite(req)
     assert result.target.grade == 5
-    assert 1 <= result.pipeline.passes_used <= 3
+    assert 1 <= result.execution.passes_used <= 3
     assert isinstance(result.hit_target, bool)
 
 
-def test_before_after_snapshots():
+def test_input_output_snapshots():
     result = _service().rewrite(RewriteRequest(text=COMPLEX, target_grade=5))
-    assert result.before.text == COMPLEX
-    assert result.after.text == result.rewritten_text
-    assert len(result.before.scores) == len(result.after.scores)
+    assert result.input.text == COMPLEX
+    assert result.output.text == result.rewritten_text
+    assert len(result.input.frameworks) == len(result.output.frameworks)
 
 
 def test_pipeline_stops_at_max_passes():
@@ -54,7 +54,7 @@ def test_pipeline_stops_at_max_passes():
     service = RewriteService(_NoopProvider(), ScoringService())
     req = RewriteRequest(text=COMPLEX, target_grade=2, max_passes=2, tolerance=0.5)
     result = service.rewrite(req)
-    assert result.pipeline.passes_used == 2
+    assert result.execution.passes_used == 2
 
 
 def test_tone_enum_accepted():

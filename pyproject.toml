@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "lexara"
 version = "0.1.0"
-description = "Lexara Reading Level & Rewrite API + Python SDK"
+description = "Lexara — rewrite to target grade API + Python SDK"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Proprietary" }

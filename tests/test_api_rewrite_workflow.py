@@ -5,13 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 FIXTURE = Path(__file__).parent / "fixtures" / "rewrite_eval_cases.json"
 SCIENCE = next(c for c in json.loads(FIXTURE.read_text())["cases"] if c["id"] == "science_passage")
 
 
-def test_rewrite_response_includes_before_after_blocks(client, auth_headers):
+def test_rewrite_response_includes_input_output_blocks(client, auth_headers):
     resp = client.post(
         "/v1/readability/rewrite",
         json={
@@ -24,14 +22,14 @@ def test_rewrite_response_includes_before_after_blocks(client, auth_headers):
     assert resp.status_code == 200
     body = resp.json()
 
-    assert body["before"]["text"] == SCIENCE["text"]
-    assert body["after"]["text"] == body["rewritten_text"]
-    assert body["before"]["aggregate_grade_level"] > body["after"]["aggregate_grade_level"]
-    assert body["improvement"]["grade_level_change"] < 0
-    assert body["improvement"]["summary"]
+    assert body["input"]["text"] == SCIENCE["text"]
+    assert body["output"]["text"] == body["rewritten_text"]
+    assert body["input"]["estimated_grade_level"] > body["output"]["estimated_grade_level"]
+    assert body["outcome"]["grade_change"] < 0
+    assert body["outcome"]["summary"]
     assert body["target"]["grade"] == SCIENCE["target_grade"]
-    assert "hit_target" in body["target"]
-    assert body["pipeline"]["provider"] == "mock"
+    assert "hit_target" in body["outcome"]
+    assert body["execution"]["provider"] == "mock"
 
 
 def test_sdk_adjust_alias(client, auth_headers):
@@ -42,4 +40,4 @@ def test_sdk_adjust_alias(client, auth_headers):
         headers=auth_headers,
     )
     assert resp.status_code == 200
-    assert resp.json()["improvement"]["moved_toward_target"] is True
+    assert resp.json()["outcome"]["moved_toward_target"] is True

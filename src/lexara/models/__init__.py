@@ -1,13 +1,12 @@
 from lexara.models.common import TextStats
 from lexara.models.errors import ErrorBody, ErrorResponse
 from lexara.models.rewrite import (
-    ReadabilitySnapshot,
-    RewriteDelta,
-    RewriteImprovement,
-    RewritePipelineInfo,
+    PassageSnapshot,
+    RewriteExecution,
+    RewriteOutcome,
     RewriteRequest,
     RewriteResponse,
-    RewriteTargetResult,
+    RewriteTarget,
     RewriteWarning,
     Tone,
 )
@@ -28,13 +27,12 @@ __all__ = [
     "ScoreConfidence",
     "ScoreRequest",
     "ScoreResponse",
-    "ReadabilitySnapshot",
-    "RewriteDelta",
-    "RewriteImprovement",
-    "RewritePipelineInfo",
+    "PassageSnapshot",
+    "RewriteExecution",
+    "RewriteOutcome",
     "RewriteRequest",
     "RewriteResponse",
-    "RewriteTargetResult",
+    "RewriteTarget",
     "RewriteWarning",
     "Tone",
 ]

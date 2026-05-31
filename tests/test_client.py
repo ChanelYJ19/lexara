@@ -45,8 +45,8 @@ def test_sdk_rewrite_returns_typed_model(sdk):
     result = sdk.readability.adjust(COMPLEX, target_grade=5, max_passes=3)
     assert result.target.grade == 5
     assert result.rewritten_text
-    assert result.before.text
-    assert result.improvement.summary
+    assert result.input.text
+    assert result.outcome.summary
 
 
 def test_sdk_raises_on_bad_key(client):

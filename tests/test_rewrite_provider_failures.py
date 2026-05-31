@@ -47,19 +47,19 @@ def test_all_provider_failures_return_original_with_warnings():
         RewriteRequest(text=TEXT, target_grade=5, max_passes=2)
     )
     assert result.rewritten_text == TEXT
-    assert result.before.text == TEXT
-    assert result.degraded is True
-    assert len(result.warnings) == 2
-    assert result.pipeline.provider_passes_failed == 2
-    assert result.pipeline.passes_used == 0
+    assert result.input.text == TEXT
+    assert result.execution.degraded is True
+    assert len(result.execution.warnings) == 2
+    assert result.execution.provider_calls_failed == 2
+    assert result.execution.passes_used == 0
 
 
 def test_empty_response_emits_warning_and_keeps_text():
     result = RewriteService(_EmptyProvider(), ScoringService()).rewrite(
         RewriteRequest(text=TEXT, target_grade=5, max_passes=1)
     )
-    assert any(w.code == "empty_response" for w in result.warnings)
-    assert result.degraded is True
+    assert any(w.code == "empty_response" for w in result.execution.warnings)
+    assert result.execution.degraded is True
 
 
 def test_recovers_after_transient_failure():
@@ -67,8 +67,8 @@ def test_recovers_after_transient_failure():
     result = RewriteService(_RecoveringProvider(), ScoringService()).rewrite(
         RewriteRequest(text=TEXT, target_grade=5, max_passes=2)
     )
-    assert result.warnings[0].code == "provider_transient_error"
+    assert result.execution.warnings[0].code == "provider_transient_error"
     assert result.rewritten_text != TEXT
-    assert result.pipeline.provider_passes_failed == 1
-    assert result.pipeline.passes_used >= 1
-    assert result.pipeline.provider_passes_attempted == 2
+    assert result.execution.provider_calls_failed == 1
+    assert result.execution.passes_used >= 1
+    assert result.execution.provider_calls_attempted == 2

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Callable
-
 from lexara.logging_config import get_logger
 from lexara.rewriting.providers.base import ProviderResult, UsageLogger
 
@@ -46,6 +44,27 @@ def default_usage_logger(provider_name: str) -> UsageLogger:
         )
 
     return _log
+
+
+def log_provider_failure(
+    provider_name: str,
+    *,
+    model: str | None,
+    attempt: int,
+    error: BaseException,
+) -> None:
+    logger.warning(
+        "llm_completion_failed",
+        extra={
+            "extra": {
+                "provider": provider_name,
+                "model": model,
+                "attempt": attempt,
+                "error_type": type(error).__name__,
+                "error": str(error)[:300],
+            }
+        },
+    )
 
 
 def attach_cost(result: ProviderResult) -> ProviderResult:

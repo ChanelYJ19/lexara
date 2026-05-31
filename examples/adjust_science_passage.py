@@ -1,4 +1,4 @@
-"""Lexara core workflow demo — adjust reading level with before/after scores."""
+"""Lexara core workflow demo — rewrite to target grade with scored proof."""
 
 from __future__ import annotations
 
@@ -17,13 +17,14 @@ def main() -> None:
     result = client.readability.adjust(PASSAGE, target_grade=6, max_passes=5)
 
     print("=== Lexara adjust workflow ===")
-    print(f"Target: grade {result.target.grade} ({result.target.target_grade_band})")
+    print(f"Target: grade {result.target.grade} ({result.target.grade_band})")
     print(f"Hit target: {result.hit_target}")
-    print(f"\nBefore: grade {result.before.aggregate_grade_level} ({result.before.grade_band})")
-    print(f"After:  grade {result.after.aggregate_grade_level} ({result.after.grade_band})")
-    print(f"\n{result.improvement.summary}")
-    print(f"\nOriginal:\n  {result.before.text[:120]}...")
-    print(f"\nRewritten:\n  {result.after.text}")
+    print(f"\nInput:  grade {result.input.estimated_grade_level} ({result.input.grade_band})")
+    print(f"Output: grade {result.output.estimated_grade_level} ({result.output.grade_band})")
+    print(f"\n{result.outcome.summary}")
+    print(f"Frameworks improved: {', '.join(result.outcome.frameworks_improved)}")
+    print(f"\nOriginal:\n  {result.input.text[:120]}...")
+    print(f"\nRewritten:\n  {result.output.text}")
 
     client.close()
 

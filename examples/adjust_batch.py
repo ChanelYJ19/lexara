@@ -24,8 +24,8 @@ def main() -> None:
     for i, (text, target) in enumerate(PASSAGES, 1):
         r = client.readability.adjust(text, target_grade=target, max_passes=4)
         print(f"[{i}] target grade {target} | hit={r.hit_target} | "
-              f"{r.improvement.grade_level_before:g}→{r.improvement.grade_level_after:g}")
-        print(f"    {r.improvement.summary}\n")
+              f"{r.outcome.estimated_grade_from:g}→{r.outcome.estimated_grade_to:g}")
+        print(f"    {r.outcome.summary}\n")
 
     client.close()
 

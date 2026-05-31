@@ -1,0 +1,136 @@
+{
+  "request": {
+    "text": "Photosynthesis lets plants make food from sunlight. Plants need sun and water to grow.",
+    "target_grade": 5.0,
+    "preserve_meaning": true,
+    "tone": "neutral",
+    "max_passes": 5,
+    "frameworks": null,
+    "tolerance": 1.0
+  },
+  "response": {
+    "request_id": null,
+    "input": {
+      "text": "Photosynthesis lets plants make food from sunlight. Plants need sun and water to grow.",
+      "estimated_grade_level": 5.1,
+      "grade_band": "6-8",
+      "frameworks": [
+        {
+          "framework": "flesch_kincaid",
+          "raw_score": 4.0,
+          "grade_band": "4-5",
+          "estimated_grade_level": 4.0,
+          "confidence": "exact",
+          "confidence_note": "Standard Flesch-Kincaid Grade formula. Syllable counts are estimated separately in stats.syllable_estimate.",
+          "interpretation": "reading level ~grade 4; comfortable for upper elementary readers.",
+          "unit": "grade"
+        },
+        {
+          "framework": "dale_chall",
+          "raw_score": 6.24,
+          "grade_band": "6-8",
+          "estimated_grade_level": 7.5,
+          "confidence": "estimated",
+          "confidence_note": "Uses the published Dale-Chall formula and grade mapping, but 'difficult words' are measured against an approximate familiar-word list, not the official licensed 3,000-word list.",
+          "interpretation": "Estimated reading level ~grade 7.5; comfortable for middle-school readers.",
+          "unit": "dale_chall"
+        },
+        {
+          "framework": "atos_estimated",
+          "raw_score": 4.86,
+          "grade_band": "4-5",
+          "estimated_grade_level": 4.9,
+          "confidence": "estimated",
+          "confidence_note": "ATOS is proprietary; this is an ATOS-style estimate from sentence length, word length, and word difficulty \u2014 not an official AR level.",
+          "interpretation": "Estimated reading level ~grade 4.9; comfortable for upper elementary readers.",
+          "unit": "grade"
+        },
+        {
+          "framework": "lexile_estimated",
+          "raw_score": 700.0,
+          "grade_band": "4-5",
+          "estimated_grade_level": 4.0,
+          "confidence": "estimated",
+          "confidence_note": "Lexile is a registered MetaMetrics measure; this is a Lexile-equivalent estimate on the L scale, not an official Lexile score.",
+          "interpretation": "Estimated reading level ~grade 4; comfortable for upper elementary readers.",
+          "unit": "lexile"
+        }
+      ]
+    },
+    "output": {
+      "text": "Photosynthesis lets plants make food from sunlight. Plants need sun and water to grow.",
+      "estimated_grade_level": 5.1,
+      "grade_band": "6-8",
+      "frameworks": [
+        {
+          "framework": "flesch_kincaid",
+          "raw_score": 4.0,
+          "grade_band": "4-5",
+          "estimated_grade_level": 4.0,
+          "confidence": "exact",
+          "confidence_note": "Standard Flesch-Kincaid Grade formula. Syllable counts are estimated separately in stats.syllable_estimate.",
+          "interpretation": "reading level ~grade 4; comfortable for upper elementary readers.",
+          "unit": "grade"
+        },
+        {
+          "framework": "dale_chall",
+          "raw_score": 6.24,
+          "grade_band": "6-8",
+          "estimated_grade_level": 7.5,
+          "confidence": "estimated",
+          "confidence_note": "Uses the published Dale-Chall formula and grade mapping, but 'difficult words' are measured against an approximate familiar-word list, not the official licensed 3,000-word list.",
+          "interpretation": "Estimated reading level ~grade 7.5; comfortable for middle-school readers.",
+          "unit": "dale_chall"
+        },
+        {
+          "framework": "atos_estimated",
+          "raw_score": 4.86,
+          "grade_band": "4-5",
+          "estimated_grade_level": 4.9,
+          "confidence": "estimated",
+          "confidence_note": "ATOS is proprietary; this is an ATOS-style estimate from sentence length, word length, and word difficulty \u2014 not an official AR level.",
+          "interpretation": "Estimated reading level ~grade 4.9; comfortable for upper elementary readers.",
+          "unit": "grade"
+        },
+        {
+          "framework": "lexile_estimated",
+          "raw_score": 700.0,
+          "grade_band": "4-5",
+          "estimated_grade_level": 4.0,
+          "confidence": "estimated",
+          "confidence_note": "Lexile is a registered MetaMetrics measure; this is a Lexile-equivalent estimate on the L scale, not an official Lexile score.",
+          "interpretation": "Estimated reading level ~grade 4; comfortable for upper elementary readers.",
+          "unit": "lexile"
+        }
+      ]
+    },
+    "target": {
+      "grade": 5.0,
+      "tolerance": 1.0,
+      "grade_band": "4-5"
+    },
+    "outcome": {
+      "estimated_grade_from": 5.1,
+      "estimated_grade_to": 5.1,
+      "grade_change": 0.0,
+      "target_grade": 5.0,
+      "hit_target": true,
+      "distance_from_target": 0.1,
+      "moved_toward_target": true,
+      "frameworks_improved": [],
+      "summary": "Already at grade 5.1 (target 5, within \u00b11). No rewrite needed."
+    },
+    "execution": {
+      "passes_used": 0,
+      "provider": "mock",
+      "skipped": true,
+      "skip_reason": "already_at_target",
+      "provider_calls_attempted": 0,
+      "provider_calls_failed": 0,
+      "warnings": [],
+      "degraded": false
+    },
+    "rewritten_text": "Photosynthesis lets plants make food from sunlight. Plants need sun and water to grow.",
+    "hit_target": true
+  }
+}

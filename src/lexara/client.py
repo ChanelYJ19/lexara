@@ -1,4 +1,4 @@
-"""Lexara Python SDK — score and rewrite in one developer-friendly workflow."""
+"""Lexara Python SDK — rewrite to target grade with scored before/after proof."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ class LexaraError(Exception):
 
 
 class _Readability:
-    """Readability workflow: multi-framework scoring and grade-targeted rewrite."""
+    """Rewrite-to-target-grade workflow with multi-framework verification."""
 
     def __init__(self, client: "LexaraClient") -> None:
         self._client = client
@@ -37,9 +37,9 @@ class _Readability:
         frameworks: list[str] | None = None,
         tolerance: float = 1.0,
     ) -> RewriteResponse:
-        """Core Lexara workflow: score → rewrite → rescore until target grade.
+        """Core Lexara workflow: rewrite toward target grade and prove it with scores.
 
-        Returns a before/after response with multi-framework scores at each step.
+        Returns input/output snapshots plus outcome (hit_target, frameworks_improved, summary).
         """
         return self.rewrite(
             text,
@@ -77,7 +77,7 @@ class _Readability:
     def score(
         self, text: str, frameworks: list[str] | None = None
     ) -> ScoreResponse:
-        """Multi-framework score only (no rewrite). Use ``adjust()`` for the full workflow."""
+        """Score-only diagnostics. Use ``adjust()`` to rewrite and verify in one call."""
         data = self._client._post(
             "/v1/readability/score", {"text": text, "frameworks": frameworks}
         )

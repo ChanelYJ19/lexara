@@ -1,4 +1,4 @@
-"""Lexara — multi-framework score & rewrite API + Python SDK."""
+"""Lexara — rewrite to target grade API + Python SDK."""
 
 from lexara.client import LexaraClient, LexaraError
 

@@ -31,7 +31,9 @@ def test_rewrite_lowers_grade_on_educational_text(rewrite_service, case):
     )
     result = rewrite_service.rewrite(req)
 
-    reduction = result.improvement.grade_level_before - result.improvement.grade_level_after
+    reduction = (
+        result.outcome.estimated_grade_from - result.outcome.estimated_grade_to
+    )
     assert reduction >= case["min_grade_reduction"], (
         f"{case['id']}: expected ≥{case['min_grade_reduction']} grade levels easier, "
         f"got {reduction}"
@@ -39,20 +41,22 @@ def test_rewrite_lowers_grade_on_educational_text(rewrite_service, case):
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c["id"] for c in CASES])
-def test_rewrite_response_shows_before_after_workflow(rewrite_service, case):
+def test_rewrite_response_shows_input_output_workflow(rewrite_service, case):
     result = rewrite_service.rewrite(
         RewriteRequest(text=case["text"], target_grade=case["target_grade"], max_passes=4)
     )
 
-    assert result.before.text == case["text"]
-    assert result.after.text == result.rewritten_text
-    assert result.before.scores
-    assert result.after.scores
-    assert result.before.aggregate_grade_level == result.improvement.grade_level_before
-    assert result.after.aggregate_grade_level == result.improvement.grade_level_after
+    assert result.input.text == case["text"]
+    assert result.output.text == result.rewritten_text
+    assert result.input.frameworks
+    assert result.output.frameworks
+    assert result.input.estimated_grade_level == result.outcome.estimated_grade_from
+    assert result.output.estimated_grade_level == result.outcome.estimated_grade_to
     assert result.target.grade == case["target_grade"]
-    assert result.improvement.summary
-    assert result.delta.grade_level_change == result.improvement.grade_level_change
+    assert result.outcome.summary
+    assert result.outcome.grade_change == round(
+        result.outcome.estimated_grade_to - result.outcome.estimated_grade_from, 1
+    )
 
 
 def test_rewrite_moved_toward_target(rewrite_service):
@@ -60,9 +64,9 @@ def test_rewrite_moved_toward_target(rewrite_service):
     result = rewrite_service.rewrite(
         RewriteRequest(text=case["text"], target_grade=case["target_grade"], max_passes=5)
     )
-    assert result.improvement.moved_toward_target is True
-    assert result.target.distance_from_target < abs(
-        result.improvement.grade_level_before - case["target_grade"]
+    assert result.outcome.moved_toward_target is True
+    assert result.outcome.distance_from_target < abs(
+        result.outcome.estimated_grade_from - case["target_grade"]
     )
 
 
@@ -76,18 +80,18 @@ def test_history_passage_moves_toward_target(rewrite_service):
             tolerance=case.get("tolerance", 2.0),
         )
     )
-    assert result.improvement.moved_toward_target is True
-    assert result.improvement.grade_level_after < result.improvement.grade_level_before
+    assert result.outcome.moved_toward_target is True
+    assert result.outcome.estimated_grade_to < result.outcome.estimated_grade_from
 
 
-def test_multi_framework_scores_present_before_and_after(rewrite_service):
+def test_multi_framework_scores_present_input_and_output(rewrite_service):
     text = CASES[0]["text"]
     result = rewrite_service.rewrite(
         RewriteRequest(text=text, target_grade=5, max_passes=4, frameworks=None)
     )
-    assert len(result.before.scores) == 4
-    assert len(result.after.scores) == 4
-    frameworks = {s.framework for s in result.before.scores}
+    assert len(result.input.frameworks) == 4
+    assert len(result.output.frameworks) == 4
+    frameworks = {s.framework for s in result.input.frameworks}
     assert frameworks == {
         "flesch_kincaid",
         "dale_chall",

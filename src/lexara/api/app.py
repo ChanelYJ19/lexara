@@ -22,12 +22,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_logging(settings.log_level)
 
     app = FastAPI(
-        title="Lexara — Score & Rewrite API",
+        title="Lexara — Rewrite to Target Grade API",
         version="0.1.0",
         description=(
-            "Edtech developer infrastructure: multi-framework readability scoring "
-            "and grade-targeted rewriting in one workflow. One API key, one SDK — "
-            "score, rewrite, and rescore until your target grade is met."
+            "Edtech developer infrastructure: **rewrite text to the right grade and prove it**. "
+            "POST /v1/readability/rewrite scores your passage, rewrites toward a target grade, "
+            "and returns input/output snapshots with multi-framework verification. "
+            "POST /v1/readability/score is available for score-only diagnostics."
         ),
     )
 

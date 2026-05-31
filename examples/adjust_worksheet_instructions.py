@@ -23,9 +23,11 @@ def main() -> None:
     )
 
     print("Worksheet instructions — grade adjustment")
-    print(f"  {result.improvement.grade_level_before:g} → {result.improvement.grade_level_after:g} "
-          f"(target {result.target_grade})")
-    print(f"  {result.improvement.summary}\n")
+    print(
+        f"  {result.outcome.estimated_grade_from:g} → {result.outcome.estimated_grade_to:g} "
+        f"(target {result.target.grade})"
+    )
+    print(f"  {result.outcome.summary}\n")
     print(result.rewritten_text)
 
     client.close()
