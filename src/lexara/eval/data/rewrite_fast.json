@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "description": "Fast pre-demo eval subset — 5 passages, one per passage type, grade 6-11 targets, max 3 passes. Excludes extreme-gap and known-borderline passages. hit_target >= 0.6 required to demo.",
+  "samples": [
+    {
+      "source_id": "g6_science_photosynthesis",
+      "passage_type": "science",
+      "source_grade_context": 10,
+      "text": "Photosynthesis is the biochemical process by which chlorophyll-containing organisms convert light energy into chemical energy, subsequently producing glucose and releasing oxygen as a byproduct of cellular metabolism.",
+      "target_grade": 6,
+      "tolerance": 1.5,
+      "max_passes": 3,
+      "expect_moved_toward_target": true
+    },
+    {
+      "source_id": "g6_social_studies_government",
+      "passage_type": "social_studies",
+      "source_grade_context": 9,
+      "text": "The legislative branch is responsible for drafting, debating, and ratifying laws that govern the populace, while also exercising oversight of the executive branch through various institutional mechanisms.",
+      "target_grade": 6,
+      "tolerance": 1.5,
+      "max_passes": 3
+    },
+    {
+      "source_id": "g7_explanation_grammar",
+      "passage_type": "explanation",
+      "source_grade_context": 11,
+      "text": "A complex sentence contains one independent clause and at least one dependent clause, which means writers can subsequently express nuanced relationships between ideas through subordinate conjunctions.",
+      "target_grade": 7,
+      "tolerance": 1.5,
+      "max_passes": 3
+    },
+    {
+      "source_id": "g10_instructions_research",
+      "passage_type": "instructions",
+      "source_grade_context": 12,
+      "text": "Students must evaluate primary and secondary sources, synthesize evidence into a coherent argument, and subsequently cite all references according to the prescribed academic format before submitting the final draft.",
+      "target_grade": 10,
+      "tolerance": 1.5,
+      "max_passes": 3
+    },
+    {
+      "source_id": "g11_worksheet_primary_sources",
+      "passage_type": "worksheet",
+      "source_grade_context": 14,
+      "text": "1. Analyze the author's perspective in the excerpt.\n2. Identify bias and corroborate claims with additional sources.\n3. Construct a thesis that addresses the prompt using sufficient textual evidence.",
+      "target_grade": 11,
+      "tolerance": 2.0,
+      "max_passes": 3
+    }
+  ]
+}
