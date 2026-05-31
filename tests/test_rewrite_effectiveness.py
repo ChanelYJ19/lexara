@@ -69,7 +69,7 @@ def test_rewrite_response_shows_input_output_workflow(rewrite_service, case):
 
 
 def test_rewrite_moved_toward_target(rewrite_service):
-    case = _sample("g5_science_photosynthesis")
+    case = _sample("g6_science_photosynthesis")
     result = rewrite_service.rewrite(
         RewriteRequest(
             text=case.text,
@@ -85,7 +85,7 @@ def test_rewrite_moved_toward_target(rewrite_service):
 
 
 def test_history_passage_moves_toward_target(rewrite_service):
-    case = _sample("g9_social_studies_economics")
+    case = _sample("g5_social_studies_economics")
     result = rewrite_service.rewrite(
         RewriteRequest(
             text=case.text,
@@ -99,7 +99,7 @@ def test_history_passage_moves_toward_target(rewrite_service):
 
 
 def test_multi_framework_scores_present_input_and_output(rewrite_service):
-    case = _sample("g5_science_photosynthesis")
+    case = _sample("g6_science_photosynthesis")
     result = rewrite_service.rewrite(
         RewriteRequest(text=case.text, target_grade=5, max_passes=4, frameworks=None)
     )

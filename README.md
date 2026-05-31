@@ -1,8 +1,13 @@
 # Lexara
 
-**Rewrite educational text to your target grade. Prove it with multi-framework scores.**
+**Rewrite educational text to a target grade level. Return multi-framework proof of what changed.**
 
-Lexara is developer infrastructure for edtech builders. One API call scores your passage, rewrites it toward a target US grade level, rescoring after each pass until the target is met — then returns `input` → `output` with per-framework before/after proof.
+Lexara is developer infrastructure for edtech builders. One API call scores a passage, rewrites it toward a target US grade level using OpenAI (gpt-4o-mini), rescores after each pass, and returns `input` → `output` with per-framework before/after proof.
+
+**Measured against a 12-passage K-12 dataset (science, social studies, math, ELA, grades 2–12):**
+- **58% of passages hit the target grade** within ±1 grade level (7/12 with OpenAI gpt-4o-mini)
+- **Average grade reduction: −8.9 levels** per rewrite
+- **Works best for grade 4–12 targets.** Passages targeting below grade 4 on academic-register text consistently fall short — see [Accuracy & Limitations](#accuracy--limitations).
 
 ```bash
 curl -s http://localhost:8000/v1/readability/rewrite \
@@ -11,7 +16,7 @@ curl -s http://localhost:8000/v1/readability/rewrite \
   -d '{"text":"Photosynthesis is the biochemical process by which chlorophyll-containing organisms convert light energy into chemical energy.","target_grade":6,"max_passes":5}'
 ```
 
-Not a readability score you stare at. A rewrite you can ship — with evidence.
+Not a readability score you stare at. A rewrite you can act on — with scored evidence before and after.
 
 ---
 
@@ -53,11 +58,23 @@ curl -s http://localhost:8000/v1/readability/rewrite \
   -H "Authorization: Bearer dev-local-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Students will subsequently utilize the provided manipulatives to demonstrate their comprehension of fractional equivalence.",
-    "target_grade": 4,
+    "text": "Photosynthesis is the biochemical process by which chlorophyll-containing organisms convert light energy into chemical energy, subsequently producing glucose and releasing oxygen as a byproduct of cellular metabolism.",
+    "target_grade": 6,
     "preserve_meaning": true,
-    "max_passes": 4
+    "max_passes": 5
   }' | python3 -m json.tool
+```
+
+**Actual output** (OpenAI gpt-4o-mini, measured):
+
+```
+input.estimated_grade_level:  18.3
+output.estimated_grade_level:  7.4
+outcome.hit_target:            true
+output.text: "Photosynthesis helps plants make food. Plants have a green color
+              called chlorophyll. This color captures light from the sun. Then,
+              plants change this light into chemical energy to produce glucose,
+              and they release oxygen as a result."
 ```
 
 Look for: `outcome.summary`, `outcome.hit_target`, `input.estimated_grade_level`, `output.estimated_grade_level`, `output.text`.
@@ -295,6 +312,17 @@ Legacy aliases: `atos` → `atos_estimated`, `lexile` → `lexile_estimated`.
 - Official Lexile, ATOS, or Dale-Chall certification
 - Guaranteed rewrite success on every passage — always check `outcome.hit_target`
 - Single "true" reading level — Lexara returns multiple frameworks intentionally
+
+---
+
+## Accuracy & Limitations
+
+Measured with OpenAI gpt-4o-mini against a 12-passage K-12 dataset (v2, May 2026):
+
+- **Below grade 4 on academic-register text: expect misses.** A passage scoring 17.1 targeting grade 2 landed at 4.5 after five passes — still 2.5 levels off. The pipeline simplifies vocabulary and sentence structure, but readability formulas score short function words and sentence count, not whether the content is truly accessible to a 7-year-old.
+- **Borderline passages vary run to run.** A grade-4 target passage hit 4.5 in one run and 7.0 in the next with the same prompt and model. Always check `outcome.hit_target` at call time; do not cache a one-time pass as a permanent quality signal.
+- **Extreme grade gaps (> 12 levels) reliably miss — this is expected.** The economics stress-test passage (original grade 22.3 → target 5.0) landed at 9.8. A single rewrite loop cannot close a 17-level gap; this failure mode is intentional and documented in the dataset.
+- **Human review is recommended before shipping to students.** `outcome.hit_target` confirms the scored grade landed in range — it does not verify that meaning was preserved, that the text is age-appropriate in tone, or that domain-specific terms were handled correctly. Treat the output as a draft, not a final.
 
 ---
 

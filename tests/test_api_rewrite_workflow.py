@@ -5,7 +5,7 @@ from __future__ import annotations
 from lexara.eval.harness import load_dataset
 
 SCIENCE = next(
-    s for s in load_dataset().samples if s.source_id == "g5_science_photosynthesis"
+    s for s in load_dataset().samples if s.source_id == "g6_science_photosynthesis"
 )
 
 

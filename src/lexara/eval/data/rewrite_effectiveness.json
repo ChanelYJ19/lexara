@@ -1,11 +1,11 @@
 {
-  "version": 1,
+  "version": 2,
   "description": "Canonical K-12 rewrite effectiveness dataset (eval harness + pytest thresholds).",
   "samples": [
     {
       "source_id": "g2_explanation_weather",
       "passage_type": "explanation",
-      "source_grade_context": 5,
+      "source_grade_context": 11,
       "text": "Precipitation occurs when atmospheric moisture condenses into droplets that subsequently accumulate until gravitational forces facilitate their descent to the surface.",
       "target_grade": 2,
       "tolerance": 1.0,
@@ -14,14 +14,14 @@
     {
       "source_id": "g3_instructions_art",
       "passage_type": "instructions",
-      "source_grade_context": 6,
+      "source_grade_context": 9,
       "text": "Students will obtain the specified materials, utilize appropriate brush techniques, and demonstrate comprehension of color mixing before commencing the final composition.",
       "target_grade": 3,
       "tolerance": 1.0,
       "max_passes": 4
     },
     {
-      "source_id": "g5_science_photosynthesis",
+      "source_id": "g6_science_photosynthesis",
       "passage_type": "science",
       "source_grade_context": 10,
       "text": "Photosynthesis is the biochemical process by which chlorophyll-containing organisms convert light energy into chemical energy, subsequently producing glucose and releasing oxygen as a byproduct of cellular metabolism.",
@@ -52,7 +52,7 @@
       "max_passes": 4
     },
     {
-      "source_id": "g4_worksheet_fractions",
+      "source_id": "g5_worksheet_fractions",
       "passage_type": "worksheet",
       "source_grade_context": 7,
       "text": "- Identify equivalent fractions using the provided visual models.\n- Demonstrate your comprehension by simplifying each fraction to lowest terms.\n- Utilize appropriate vocabulary when explaining your reasoning.",
@@ -63,9 +63,10 @@
       "expect_moved_toward_target": true
     },
     {
-      "source_id": "g9_social_studies_economics",
+      "source_id": "g5_social_studies_economics",
       "passage_type": "social_studies",
-      "source_grade_context": 13,
+      "source_grade_context": 14,
+      "description": "Extreme simplification stress test: college-level policy text rewritten to grade 5. Intentionally hard — 9-grade-level gap. Use to probe upper bound of the rewrite pipeline; do not treat hit_target failure here as a regression.",
       "text": "The multifaceted ramifications of macroeconomic policy interventions necessitate comprehensive interdisciplinary analysis before implementation across heterogeneous institutional environments.",
       "target_grade": 5,
       "tolerance": 2.0,

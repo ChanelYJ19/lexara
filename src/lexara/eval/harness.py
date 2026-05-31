@@ -45,13 +45,16 @@ def evaluate_sample(
     return EvalResult(
         source_id=sample.source_id,
         passage_type=sample.passage_type,
-        source_grade_estimate=source_grade,
+        original_grade=source_grade,
         target_grade=sample.target_grade,
-        rewritten_grade_estimate=rewritten_grade,
+        rewritten_grade=rewritten_grade,
         hit_target=rewrite.hit_target,
         attempts_used=rewrite.execution.passes_used,
         delta=delta,
         moved_toward_target=rewrite.outcome.moved_toward_target,
+        warnings=[],
+        original_text=sample.text,
+        rewritten_text=rewrite.output.text,
         semantic_preservation_notes="",
     )
 
@@ -92,8 +95,8 @@ def format_summary_table(summary: EvalRunSummary) -> str:
     for row in summary.results:
         lines.append(
             f"{row.source_id:<32} {row.passage_type.value:<14} "
-            f"{row.source_grade_estimate:>5.1f} {row.target_grade:>5.1f} "
-            f"{row.rewritten_grade_estimate:>5.1f} {row.delta:>+6.1f} "
+            f"{row.original_grade:>5.1f} {row.target_grade:>5.1f} "
+            f"{row.rewritten_grade:>5.1f} {row.delta:>+6.1f} "
             f"{'yes' if row.hit_target else 'no':>4} {row.attempts_used:>4}"
         )
     lines.append("")

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 from lexara.config import get_settings
@@ -16,6 +17,13 @@ from lexara.eval.harness import (
 )
 from lexara.eval.models import EvalRunSummary
 from lexara.rewriting.providers import build_provider
+
+_PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+
+
+def _default_output(provider: str) -> Path:
+    today = date.today().isoformat()
+    return _PROJECT_ROOT / "eval" / "results" / f"rewrite_eval_{provider}_{today}.json"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -35,7 +43,10 @@ def main(argv: list[str] | None = None) -> int:
         "--output",
         type=Path,
         default=None,
-        help="Write JSON summary to this path (default: stdout only)",
+        help=(
+            "Write JSON results to this path "
+            "(default: eval/results/rewrite_eval_{provider}_{date}.json)"
+        ),
     )
     parser.add_argument(
         "--format",
@@ -60,9 +71,11 @@ def main(argv: list[str] | None = None) -> int:
     summary = run_eval(dataset, provider=provider)
 
     payload = summary.model_dump(mode="json")
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps(payload, indent=2) + "\n")
+    out_path = args.output or _default_output(summary.provider)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, indent=2) + "\n")
+    if not args.output:
+        print(f"Results written to {out_path}", file=sys.stderr)
 
     if args.format in ("json", "both"):
         print(json.dumps(payload, indent=2))

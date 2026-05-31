@@ -60,16 +60,15 @@ def test_evaluate_sample_returns_required_fields(rewrite_service, scoring_servic
         scoring_service=scoring_service,
     )
     assert result.source_id == sample.source_id
-    assert result.source_grade_estimate >= 0
+    assert result.original_grade >= 0
     assert result.target_grade == sample.target_grade
-    assert result.rewritten_grade_estimate >= 0
+    assert result.rewritten_grade >= 0
     assert isinstance(result.hit_target, bool)
     assert result.attempts_used >= 0
-    assert result.delta == round(
-        result.rewritten_grade_estimate - result.source_grade_estimate, 1
-    )
+    assert result.delta == round(result.rewritten_grade - result.original_grade, 1)
     assert result.semantic_preservation_notes == ""
     assert isinstance(result.moved_toward_target, bool)
+    assert isinstance(result.warnings, list)
 
 
 def test_run_eval_summary_counts(rewrite_service):
@@ -92,7 +91,10 @@ def test_run_eval_summary_counts(rewrite_service):
     assert summary.provider == "mock"
     assert len(summary.results) == 1
     assert summary.hit_target_count in (0, 1)
+    assert summary.hit_target_rate == summary.hit_target_count / summary.sample_count
     assert summary.mean_abs_delta >= 0
+    assert isinstance(summary.avg_grade_delta, float)
+    assert isinstance(summary.grade_band_breakdown, dict)
 
 
 def test_mock_provider_lowers_grade_on_hard_passages():
@@ -115,15 +117,19 @@ def test_eval_result_serializes_to_json():
     row = payload["results"][0]
     for key in (
         "source_id",
-        "source_grade_estimate",
+        "original_grade",
         "target_grade",
-        "rewritten_grade_estimate",
+        "rewritten_grade",
         "hit_target",
         "attempts_used",
         "delta",
+        "warnings",
         "semantic_preservation_notes",
     ):
         assert key in row
+    assert "hit_target_rate" in payload
+    assert "avg_grade_delta" in payload
+    assert "grade_band_breakdown" in payload
 
 
 def test_runner_main_mock_provider(tmp_path, capsys):
