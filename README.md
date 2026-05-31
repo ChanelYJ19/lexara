@@ -1,21 +1,171 @@
-# Lexara — Rewrite to Target Grade API
+# Lexara
 
-**Rewrite text to the right grade and prove it — multi-framework scoring is the verification layer.**
+**Rewrite educational text to your target grade. Prove it with multi-framework scores.**
 
-Lexara is developer infrastructure for edtech. One API call: score your passage, rewrite toward a target grade, rescore until you hit it (or exhaust passes). Returns `input` → `output` with per-framework proof. Score-only diagnostics available when you don't need a rewrite yet.
+Lexara is developer infrastructure for edtech builders. One API call scores your passage, rewrites it toward a target US grade level, rescoring after each pass until the target is met — then returns `input` → `output` with per-framework before/after proof.
 
-> **Why Lexara vs score-only APIs?** A scoring endpoint tells you a passage is too hard. Lexara closes the loop: rewrite → verify → retry — with multi-framework before/after proof at every step.
+```bash
+curl -s http://localhost:8000/v1/readability/rewrite \
+  -H "Authorization: Bearer dev-local-key" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Photosynthesis is the biochemical process by which chlorophyll-containing organisms convert light energy into chemical energy.","target_grade":6,"max_passes":5}'
+```
+
+Not a readability score you stare at. A rewrite you can ship — with evidence.
 
 ---
 
-## Quick start (rewrite workflow)
+## Why Lexara exists
+
+### Score-only is not enough
+
+A score-only API tells you a worksheet reads at grade 11. It does not give you a grade-5 version. Your user still has to rewrite by hand, guess whether it worked, and hope one readability number reflects their district's expectations.
+
+That is a diagnostic. Edtech products need an **action**: adjust the text, verify the result, retry if needed.
+
+### Why multi-framework scoring + rewrite together
+
+No single readability formula is authoritative — districts, publishers, and literacy tools reference different frameworks (Flesch-Kincaid, Dale-Chall, Lexile-style, ATOS-style). Lexara:
+
+1. **Scores across frameworks** before and after the rewrite
+2. **Rewrites toward your target grade**, not a single opaque number
+3. **Returns proof** — `outcome.hit_target`, `frameworks_improved`, and per-framework grades on both sides
+
+Scoring is the **verification layer** for the rewrite. The product is the loop: **rewrite → rescore → prove**.
+
+---
+
+## Quick start
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env
-lexara-api   # http://localhost:8000/docs
+lexara-api   # → http://localhost:8000/docs
 ```
+
+### 1. Rewrite (curl) — start here
+
+```bash
+curl -s http://localhost:8000/v1/readability/rewrite \
+  -H "Authorization: Bearer dev-local-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Students will subsequently utilize the provided manipulatives to demonstrate their comprehension of fractional equivalence.",
+    "target_grade": 4,
+    "preserve_meaning": true,
+    "max_passes": 4
+  }' | python3 -m json.tool
+```
+
+Look for: `outcome.summary`, `outcome.hit_target`, `input.estimated_grade_level`, `output.estimated_grade_level`, `output.text`.
+
+### 2. Rewrite (Python SDK)
+
+```python
+from lexara import LexaraClient, Tone
+
+client = LexaraClient(api_key="dev-local-key")
+
+result = client.readability.rewrite(
+    "Photosynthesis is the biochemical process by which chlorophyll-containing "
+    "organisms convert light energy into chemical energy.",
+    target_grade=6,
+    preserve_meaning=True,
+    max_passes=5,
+)
+
+print(result.outcome.summary)
+print(f"{result.input.estimated_grade_level} → {result.output.estimated_grade_level} (target {result.target.grade})")
+print(f"Hit target: {result.hit_target} | Frameworks improved: {result.outcome.frameworks_improved}")
+print(result.output.text)
+```
+
+### 3. Score only (when you don't need a rewrite yet)
+
+```python
+scored = client.readability.score(
+    passage,
+    frameworks=["flesch_kincaid", "lexile"],
+)
+print(scored.aggregate.estimated_grade_level)
+```
+
+Use `POST /v1/readability/score` for diagnostics. Use `rewrite` when you need to **act** on the result.
+
+---
+
+## Demo-ready examples
+
+Three passages you can run in a customer call, Show HN thread, or live demo. All work with the local mock provider (no API spend).
+
+### Demo A — Science passage: college → grade 6
+
+**Story:** *"Your curriculum import is too hard for middle school. One call fixes and proves it."*
+
+```bash
+curl -s http://localhost:8000/v1/readability/rewrite \
+  -H "Authorization: Bearer dev-local-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Photosynthesis is the biochemical process by which chlorophyll-containing organisms convert light energy into chemical energy, subsequently producing glucose and releasing oxygen as a byproduct of cellular metabolism.",
+    "target_grade": 6,
+    "max_passes": 5,
+    "tolerance": 1.5
+  }'
+```
+
+```python
+from lexara import LexaraClient
+
+PASSAGE = (
+    "Photosynthesis is the biochemical process by which chlorophyll-containing "
+    "organisms convert light energy into chemical energy, subsequently producing "
+    "glucose and releasing oxygen as a byproduct of cellular metabolism."
+)
+
+client = LexaraClient(api_key="dev-local-key")
+r = client.readability.rewrite(PASSAGE, target_grade=6, max_passes=5, tolerance=1.5)
+print(f"Before: grade {r.input.estimated_grade_level}  After: grade {r.output.estimated_grade_level}")
+print(r.output.text)
+```
+
+**Talk track:** Show `input.frameworks[]` vs `output.frameworks[]` — four frameworks moved, not one proprietary number.
+
+---
+
+### Demo B — Worksheet instructions: teacher tone, grade 4
+
+**Story:** *"Teachers paste LMS instructions. Lexara returns student-ready text with meaning preserved."*
+
+```python
+from lexara import LexaraClient, Tone
+
+client = LexaraClient(api_key="dev-local-key")
+
+result = client.readability.rewrite(
+    "Students will subsequently utilize the provided manipulatives to demonstrate "
+    "their comprehension of fractional equivalence, and they must obtain sufficient "
+    "evidence before completing the assessment.",
+    target_grade=4,
+    tone=Tone.friendly,
+    preserve_meaning=True,
+    max_passes=4,
+)
+
+if result.hit_target:
+    ship_to_lms(result.output.text)
+else:
+    print(result.outcome.summary, result.execution.warnings)
+```
+
+Run: `python examples/sdk_rewrite_to_target.py`
+
+---
+
+### Demo C — Already at target: no LLM call
+
+**Story:** *"Lexara doesn't burn tokens when content is already right — it scores, verifies, and skips."*
 
 ```python
 from lexara import LexaraClient
@@ -23,214 +173,58 @@ from lexara import LexaraClient
 client = LexaraClient(api_key="dev-local-key")
 
 result = client.readability.rewrite(
-    "Photosynthesis converts light energy into chemical energy...",
-    target_grade=6,
+    "Photosynthesis lets plants make food from sunlight. Plants need sun and water to grow.",
+    target_grade=5,
+    tolerance=1.0,
 )
 
+assert result.execution.skipped is True
+assert result.execution.passes_used == 0
+assert result.hit_target is True
+assert result.output.text == result.input.text
 print(result.outcome.summary)
-print(f"passes: {result.execution.passes_used} | hit: {result.hit_target}")
-print(f"frameworks improved: {result.outcome.frameworks_improved}")
-
-print(result.input.estimated_grade_level)   # before
-print(result.output.estimated_grade_level)  # after
-print(result.output.text)                   # rewritten passage
+# → "Already at grade 5.1 (target 5, within ±1). No rewrite needed."
 ```
 
-```bash
-pytest   # includes rewrite effectiveness evals + canonical example validation
-```
+Full payload: `examples/canonical/rewrite_already_at_target.json`
+
+**Run all three:** `python examples/demo_showcase.py`
 
 ---
 
-## Endpoints
+## API
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/v1/readability/rewrite` | **Core workflow** — rewrite to target grade + scored proof |
+| `POST` | `/v1/readability/rewrite` | **Primary** — rewrite to target grade + multi-framework proof |
 | `POST` | `/v1/readability/score` | Diagnostics only — no rewrite |
 | `GET` | `/health` | Liveness |
 
 Auth: `Authorization: Bearer <key>` or `x-api-key: <key>`
 
----
+### Rewrite response (read in this order)
 
-## Response shape (rewrite-first)
+| Block | Meaning |
+|-------|---------|
+| `input` / `output` | Original vs rewritten text + per-framework grades |
+| `outcome` | `hit_target`, grade from → to, `frameworks_improved`, `summary` |
+| `target` | Goal grade, tolerance, grade band |
+| `execution` | Passes used, provider, `skipped`, `warnings` |
 
-Read the response in this order:
+Shortcuts: `rewritten_text`, `hit_target`.
 
-| Block | What it tells you |
-|-------|-------------------|
-| `input` / `output` | The transformation — original text vs rewritten text, each with `estimated_grade_level` and `frameworks[]` |
-| `outcome` | Verification — `hit_target`, grade moved `estimated_grade_from` → `estimated_grade_to`, `frameworks_improved`, `summary` |
-| `target` | The grade goal (`grade`, `tolerance`, `grade_band`) |
-| `execution` | Pipeline — `passes_used`, `provider`, `skipped`, `warnings` |
-
-Computed shortcuts: `rewritten_text` (= `output.text`), `hit_target` (= `outcome.hit_target`).
-
----
-
-## Canonical examples
-
-Full request/response payloads live in [`examples/canonical/`](examples/canonical/):
-
-| File | Scenario |
-|------|----------|
-| `rewrite_hit_target.json` | Rewrite succeeds in one pass (`hit_target: true`) |
-| `rewrite_improved_miss.json` | Rewrite improves but misses target (`moved_toward_target: true`, `hit_target: false`) |
-| `rewrite_already_at_target.json` | Input already at target — no LLM call (`execution.skipped: true`) |
-
----
-
-## Example 1 — Rewrite a passage (curl)
-
-```bash
-curl -s http://localhost:8000/v1/readability/rewrite \
-  -H "Authorization: Bearer dev-local-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Photosynthesis is the biochemical process by which chlorophyll-containing organisms convert light energy into chemical energy.",
-    "target_grade": 6,
-    "preserve_meaning": true,
-    "max_passes": 5
-  }'
-```
-
-Key response fields:
-
-```json
-{
-  "input": {
-    "text": "Photosynthesis is the biochemical process...",
-    "estimated_grade_level": 15.4,
-    "grade_band": "College",
-    "frameworks": [{ "framework": "flesch_kincaid", "estimated_grade_level": 16.2 }]
-  },
-  "output": {
-    "text": "Plants use sunlight to make food. They also make oxygen.",
-    "estimated_grade_level": 5.8,
-    "grade_band": "4-5",
-    "frameworks": [{ "framework": "flesch_kincaid", "estimated_grade_level": 4.6 }]
-  },
-  "target": { "grade": 6, "tolerance": 1.0, "grade_band": "6-8" },
-  "outcome": {
-    "estimated_grade_from": 15.4,
-    "estimated_grade_to": 5.8,
-    "grade_change": -9.6,
-    "target_grade": 6,
-    "hit_target": true,
-    "distance_from_target": 0.2,
-    "moved_toward_target": true,
-    "frameworks_improved": ["flesch_kincaid", "dale_chall", "atos_estimated", "lexile_estimated"],
-    "summary": "Lowered from grade 15.4 to 5.8 (target 6, within ±1)."
-  },
-  "execution": {
-    "passes_used": 2,
-    "provider": "mock",
-    "skipped": false,
-    "provider_calls_attempted": 2,
-    "provider_calls_failed": 0,
-    "warnings": [],
-    "degraded": false
-  },
-  "rewritten_text": "Plants use sunlight to make food. They also make oxygen.",
-  "hit_target": true
-}
-```
-
----
-
-## Example 2 — Already at target (no LLM call)
-
-When text already reads at the target grade, Lexara scores it, skips the rewrite, and returns `execution.skipped: true`:
-
-```python
-result = client.readability.adjust(
-    "Photosynthesis lets plants make food from sunlight. Plants need sun and water.",
-    target_grade=5,
-    tolerance=1.0,
-)
-assert result.execution.skipped is True
-assert result.execution.passes_used == 0
-assert result.hit_target is True
-assert result.output.text == result.input.text
-```
-
-See `examples/canonical/rewrite_already_at_target.json`.
-
----
-
-## Example 3 — Simplify worksheet instructions (Python SDK)
-
-```python
-from lexara import LexaraClient
-
-client = LexaraClient(api_key="dev-local-key")
-
-result = client.readability.adjust(
-    "Students will subsequently utilize the provided manipulatives to demonstrate "
-    "their comprehension of fractional equivalence.",
-    target_grade=4,
-    tone="friendly",
-    max_passes=4,
-)
-
-if result.hit_target:
-    publish_to_lms(result.output.text)
-else:
-    log(result.outcome.summary, warnings=result.execution.warnings)
-```
-
-Run: `python examples/adjust_worksheet_instructions.py`
-
----
-
-## Example 4 — Batch-adjust lesson content
-
-```python
-passages = [
-    ("The committee will subsequently utilize numerous resources...", 5),
-    ("- Define photosynthesis.\n- Explain how plants use sunlight.", 5),
-]
-
-for text, target in passages:
-    r = client.readability.adjust(text, target_grade=target)
-    print(r.outcome.estimated_grade_from, "→", r.outcome.estimated_grade_to, r.hit_target)
-```
-
-Run: `python examples/adjust_batch.py`
-
----
-
-## Example 5 — Score only (diagnostics)
-
-When you only need readability diagnostics — or want to check grade before calling rewrite:
-
-```bash
-curl -s http://localhost:8000/v1/readability/score \
-  -H "Authorization: Bearer dev-local-key" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "The cat sat on the mat.", "frameworks": ["flesch_kincaid", "lexile_estimated"]}'
-```
-
-Then rewrite with the same text:
-
-```bash
-curl -s http://localhost:8000/v1/readability/rewrite \
-  -H "Authorization: Bearer dev-local-key" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "The cat sat on the mat.", "target_grade": 2, "max_passes": 3}'
-```
+Canonical JSON: [`examples/canonical/`](examples/canonical/)
 
 ---
 
 ## Python SDK
 
 ```python
-from lexara import LexaraClient, Tone
+from lexara import LexaraClient, Tone, RewriteOptions
 
 client = LexaraClient(api_key="...", timeout=120, max_retries=2)
 
-# Hero workflow — rewrite to target grade with before/after proof
+# Hero workflow
 result = client.readability.rewrite(
     text,
     target_grade=5,
@@ -239,101 +233,77 @@ result = client.readability.rewrite(
     max_passes=4,
 )
 
-# Score only — diagnostics without rewriting
-scores = client.readability.score(text, frameworks=["flesch_kincaid", "lexile"])
+# Or bundle options (all fields optional except target_grade on rewrite call)
+opts = RewriteOptions(preserve_meaning=True, tone=Tone.friendly, max_passes=4)
+result = client.readability.rewrite(text, target_grade=5, options=opts)
 ```
-
-**Examples:** `examples/sdk_score_only.py`, `examples/sdk_rewrite_to_target.py`, `examples/sdk_rewrite_inspect_scores.py`
-
-### Rewrite options
 
 | Parameter | Default | Meaning |
 |-----------|---------|---------|
 | `target_grade` | required | Desired US grade level (1–16) |
 | `preserve_meaning` | `True` | Keep facts, numbers, names, steps |
-| `tone` | `neutral` | `Tone.friendly`, `formal`, `playful`, `academic`, … |
+| `tone` | `neutral` | `friendly`, `formal`, `playful`, `academic`, … |
 | `max_passes` | `3` | Max rewrite → rescore iterations |
 | `frameworks` | all | Frameworks used to judge progress |
 | `tolerance` | `1.0` | Grade levels within target = hit |
 
-Or pass a :class:`~lexara.options.RewriteOptions` dataclass via ``options=``.
+**Examples:** `examples/sdk_rewrite_to_target.py` · `examples/sdk_rewrite_inspect_scores.py` · `examples/sdk_score_only.py`
 
-### Exceptions
-
-| Exception | When |
-|-----------|------|
-| `AuthenticationError` | Invalid API key (401) |
-| `ValidationError` | Bad request params (422) |
-| `LexaraTimeoutError` | Request timed out |
-| `LexaraConnectionError` | Network failure |
-| `LexaraAPIError` | Other API errors |
-
-`rewrite()` returns typed `RewriteResponse` with:
-
-| Field | Meaning |
-|-------|---------|
-| `input` / `output` | Text + multi-framework verification at each step |
-| `outcome.hit_target` | Whether target grade was met |
-| `outcome.frameworks_improved` | Frameworks that moved closer to target |
-| `outcome.summary` | Plain-language before → after outcome |
-| `execution.passes_used` | Rewrite/rescore loops (0 if already at target) |
-| `execution.skipped` | True when text was already at target |
-| `rewritten_text` | Shortcut for `output.text` |
+**Exceptions:** `AuthenticationError` · `ValidationError` · `LexaraTimeoutError` · `LexaraConnectionError` · `LexaraAPIError`
 
 ---
 
-## Rewrite + rescore workflow
+## How rewrite works
 
-Each `POST /v1/readability/rewrite` request runs:
+Each `POST /v1/readability/rewrite` request:
 
-1. **Score input** across selected frameworks
-2. **Skip LLM** if already within `tolerance` of `target_grade`
+1. Scores `input` across selected frameworks
+2. Skips the LLM if already within `tolerance` of `target_grade`
 3. Otherwise **rewrite → rescore → retry** up to `max_passes`
-4. Return the **best attempt** (closest to target) with input/output snapshots and `outcome` verification
+4. Returns the best attempt with full before/after snapshots
 
-Prompts preserve facts, numbers, names, and instructional steps when `preserve_meaning=true`. Provider and rescore failures emit structured `execution.warnings` and set `execution.degraded=true` without crashing the request.
+Provider failures become `execution.warnings` — the endpoint returns 200 with the best text so far. Check `outcome.hit_target` and `execution.degraded` before shipping to users.
 
 ---
 
-## Scoring engine
+## Frameworks & safe claims
 
-Each framework lives in `src/lexara/scoring/frameworks/`:
+| Framework | ID | Confidence | What to tell customers |
+|-----------|-----|------------|------------------------|
+| Flesch-Kincaid Grade | `flesch_kincaid` | **exact** | Standard formula; syllable counts use an estimated syllable heuristic |
+| New Dale-Chall | `dale_chall` | **estimated** | Published formula; familiar-word list is approximate, not the licensed 3,000-word list |
+| ATOS-style | `atos_estimated` | **estimated** | ATOS-style estimate — **not** an official Accelerated Reader level |
+| Lexile-equivalent | `lexile_estimated` | **estimated** | Lexile-scale estimate — **not** an official MetaMetrics Lexile score |
 
-| Framework | ID | `confidence` |
-|-----------|-----|--------------|
-| Flesch-Kincaid Grade | `flesch_kincaid` | `exact` |
-| New Dale-Chall | `dale_chall` | `estimated` |
-| ATOS-style | `atos_estimated` | `estimated` |
-| Lexile-equivalent | `lexile_estimated` | `estimated` |
+Legacy aliases: `atos` → `atos_estimated`, `lexile` → `lexile_estimated`.
 
-Every score response includes text stats: `sentence_count`, `word_count`, `avg_sentence_length`, `avg_word_length`, `syllable_estimate`, `difficult_word_count`.
+### Safe to say
 
-Legacy aliases `atos` / `lexile` resolve to `*_estimated`.
+- Rewrite toward a target US grade level in one API call
+- Multi-framework before/after proof (`input.frameworks` → `output.frameworks`)
+- Flesch-Kincaid uses the standard grade formula; other frameworks are clearly labeled `estimated`
+- Developer-friendly SDK: `client.readability.rewrite(text, target_grade=6)`
 
-Regression bands: `tests/fixtures/scoring_calibration.json`  
-Rewrite evals: `tests/fixtures/rewrite_eval_cases.json`
+### Do not say
+
+- Official Lexile, ATOS, or Dale-Chall certification
+- Guaranteed rewrite success on every passage — always check `outcome.hit_target`
+- Single "true" reading level — Lexara returns multiple frameworks intentionally
 
 ---
 
 ## Configuration
 
-See `.env.example`. Key vars:
+See `.env.example`.
 
 | Var | Default | Meaning |
 |-----|---------|---------|
-| `LEXARA_LLM_PROVIDER` | `mock` | `mock` or `openai` for real rewrites |
+| `LEXARA_LLM_PROVIDER` | `mock` | `mock` (local/dev) or `openai` (real rewrites) |
 | `LEXARA_OPENAI_API_KEY` | – | Required when provider is `openai` |
-| `LEXARA_OPENAI_MODEL` | `gpt-4o-mini` | OpenAI chat model for rewrites |
-| `LEXARA_OPENAI_TIMEOUT_SECONDS` | `60` | Per-request timeout |
-| `LEXARA_OPENAI_MAX_RETRIES` | `2` | Retries on transient OpenAI errors |
-| `LEXARA_OPENAI_MAX_COMPLETION_TOKENS` | `4096` | Cap output tokens per LLM call |
+| `LEXARA_OPENAI_MODEL` | `gpt-4o-mini` | Chat model for rewrites |
 | `LEXARA_API_KEYS` | `dev-local-key` | Valid API keys |
 
----
-
-## Real LLM provider (OpenAI alpha)
-
-For customer-facing rewrite quality, switch from the deterministic mock to OpenAI:
+Real provider setup:
 
 ```bash
 pip install -e ".[openai]"
@@ -342,116 +312,51 @@ export LEXARA_OPENAI_API_KEY=sk-...
 lexara-api
 ```
 
-The OpenAI provider is alpha-hardened:
-
-- **Timeouts** — `LEXARA_OPENAI_TIMEOUT_SECONDS` per request
-- **Retries** — transient errors (timeout, connection, rate limit) with exponential backoff; honors `Retry-After` when present
-- **Structured output** — `response_format: json_object` + strict parse of `{"rewritten_text": "..."}`
-- **Parse fallback** — lenient plain-text fallback if JSON shape is wrong (logged as warning)
-- **Failure-safe** — provider errors become `execution.warnings`; the rewrite endpoint returns 200 with the best text so far
-- **Cost hooks** — structured `llm_completion` logs with token counts and estimated USD cost
-
-Provider failures never crash `POST /v1/readability/rewrite` — check `execution.degraded` and `execution.warnings`.
-
----
-
-## Running real-provider tests safely
-
-Integration tests are **opt-in** and **never run in default `pytest`**.
-
-```bash
-pip install -e ".[openai,dev]"
-
-# Live rewrite quality contract (costs a few cents; uses your API key)
-LEXARA_OPENAI_API_KEY=sk-... pytest -m integration -v
-
-# Only the live OpenAI rewrite test:
-LEXARA_OPENAI_API_KEY=sk-... pytest tests/test_openai_contract.py::test_openai_rewrite_produces_simpler_text -v
-```
-
-**Safety rules:**
-
-- Do **not** set `LEXARA_OPENAI_API_KEY` in CI unless you intend to run integration tests.
-- Default `pytest` uses the mock provider only — no network, no spend.
-- `test_openai_provider_failure_returns_structured_warnings` uses an invalid key but is marked `integration` and hits the network once; run it only when validating failure behavior.
-- Monitor logs for `llm_completion` (success) and `llm_completion_failed` (retries).
-
 ---
 
 ## Rewrite effectiveness evals
 
-Lightweight harness to learn what works in customer demos — **rewrite quality**, not just scoring formulas.
-
-For each sample in `src/lexara/eval/data/rewrite_effectiveness.json` the harness runs:
-
-1. **Original score** — multi-framework grade estimate  
-2. **Rewrite** — toward the sample's target grade  
-3. **Rewritten score** — verification after rewrite  
-
-Each row includes: `source_id`, `source_grade_estimate`, `target_grade`, `rewritten_grade_estimate`, `hit_target`, `attempts_used`, `delta`, and an empty `semantic_preservation_notes` field for manual meaning-preservation review after demos.
-
-The dataset covers grades 2–12 across passage types: explanation, instructions, science, social studies, and worksheet-style text.
-
-### Run locally (mock — free, deterministic)
+Measure rewrite quality before demos — not just formula correctness:
 
 ```bash
-pip install -e ".[dev]"
-
-# Table summary to stdout
-lexara-eval
-
-# Save JSON for review / sharing
-lexara-eval --format both --output eval/results.json
-
-# Equivalent module invocation
-python -m lexara.eval.runner --provider mock --output eval/results.json
+lexara-eval                              # table summary (mock)
+lexara-eval --output eval/results.json   # save JSON for review
 ```
 
-### Run with OpenAI before a demo
+Dataset: `src/lexara/eval/data/rewrite_effectiveness.json` (grades 2–12, five passage types).
 
-```bash
-pip install -e ".[openai,dev]"
-export LEXARA_OPENAI_API_KEY=sk-...
-export LEXARA_LLM_PROVIDER=openai
-
-lexara-eval --provider openai --format both --output eval/results-openai.json
-```
-
-After the run, fill in `semantic_preservation_notes` in the JSON for passages you reviewed (facts kept? steps intact?).
-
-### Programmatic use
-
-```python
-from lexara.eval import load_dataset, run_eval
-from lexara.rewriting.providers.mock import MockLLMProvider
-
-summary = run_eval(load_dataset(), provider=MockLLMProvider())
-for row in summary.results:
-    print(row.source_id, row.delta, row.hit_target)
-```
+With OpenAI: `lexara-eval --provider openai --output eval/results-openai.json`
 
 ---
 
-## Safe customer claims
+## Homepage & API copy (suggested)
 
-**Say:** rewrite to target grade with multi-framework before/after proof; developer-friendly SDK.
+**Headline:** Rewrite text to your target grade. Prove it across four frameworks.
 
-**Don't say:** official Lexile/ATOS/Dale-Chall certification; guaranteed rewrite on every passage (check `outcome.hit_target`, `execution.warnings`).
+**Subhead:** Lexara is edtech API infrastructure — score, rewrite, rescore, and return before/after proof in one call. Not a number. A number you acted on.
+
+**API one-liner:** `POST /v1/readability/rewrite` — rewrite toward a target grade; get `input`, `output`, and `outcome.hit_target` with Flesch-Kincaid, Dale-Chall, ATOS-style, and Lexile-equivalent verification.
+
+**Bullets for landing page:**
+- Score-only APIs diagnose. Lexara rewrites and proves the result.
+- Multi-framework before/after — not one proprietary readability number.
+- One SDK call: `client.readability.rewrite(passage, target_grade=6)`
+- Skips the LLM when text is already at target.
 
 ---
 
-## Suggested homepage / API copy
+## Demo script (5 minutes)
 
-**Headline:** Rewrite text to your target grade. Prove it with multi-framework scores.
+Use this flow in a customer call or Show HN live demo:
 
-**Subhead:** Lexara is edtech developer infrastructure — not a score you stare at, but a rewrite you can ship with before/after verification in one API call.
+1. **Problem (30s)** — Paste the Demo A science passage. *"This reads at college level. Your middle-school product can't use it as-is."*
+2. **Rewrite (60s)** — Run curl or SDK. Show `outcome.summary` and grade drop in `input` → `output`.
+3. **Proof (60s)** — Expand `input.frameworks` and `output.frameworks`. *"We don't trust one formula — we show four, before and after."*
+4. **Teacher workflow (60s)** — Demo B worksheet instructions with `tone=friendly`. Show rewritten bullet-friendly text.
+5. **Efficiency (30s)** — Demo C already-at-target. *"No LLM call when content is already right."*
+6. **Ship check (30s)** — Point at `outcome.hit_target`, `execution.warnings`, and the safe-claims table. *"You decide when to ship; Lexara gives you structured proof."*
 
-**API one-liner:** `POST /v1/readability/rewrite` — rewrite toward a target grade, rescore until you hit it, return input/output snapshots with Flesch-Kincaid, Dale-Chall, ATOS-style, and Lexile-equivalent proof.
-
-**Differentiator bullets:**
-- Score-only APIs tell you the problem. Lexara fixes it in the same request.
-- `input` → `output` transformation with `outcome.hit_target` and `frameworks_improved`.
-- One SDK method: `client.readability.adjust(text, target_grade=6)`
+Runnable: `python examples/demo_showcase.py`
 
 ---
 
@@ -463,21 +368,18 @@ for row in summary.results:
 | `services/` | Rewrite + scoring orchestration |
 | `scoring/` | Pure readability formulas |
 | `rewriting/` | LLM provider + rewrite/rescore pipeline |
-| `eval/` | Rewrite effectiveness eval harness + K-12 demo dataset |
-| `client.py` | Typed Python SDK |
+| `eval/` | Rewrite effectiveness harness |
+| `client.py` | Python SDK |
 
 ---
 
 ## Tests
 
 ```bash
-pytest                                    # full suite (mock provider, no network)
-pytest tests/test_eval_harness.py -v      # rewrite effectiveness eval harness
-pytest tests/test_canonical_examples.py   # validate canonical JSON payloads
-pytest tests/test_rewrite_workflow_alpha.py -v
-pytest tests/test_rewrite_effectiveness.py -v
-pytest tests/test_openai_provider.py -v   # mocked OpenAI SDK (no network)
+pytest                                    # full suite (mock, no network)
+pytest tests/test_eval_harness.py -v
+pytest tests/test_client.py -v
 
-# Live OpenAI — opt-in, requires key, may incur cost:
+# Live OpenAI — opt-in:
 LEXARA_OPENAI_API_KEY=sk-... pytest -m integration -v
 ```
