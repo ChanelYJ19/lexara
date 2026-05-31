@@ -1,0 +1,80 @@
+{
+  "version": 2,
+  "description": "Regression bands for Lexara v1 scoring engine.",
+  "cases": [
+    {
+      "id": "simple_elementary",
+      "text": "The cat sat on the mat. The dog ran fast. We had fun.",
+      "frameworks": {
+        "flesch_kincaid": {
+          "estimated_grade_level": [0.0, 2.0],
+          "raw_score": [-5.0, 2.0]
+        },
+        "dale_chall": {
+          "estimated_grade_level": [4.0, 7.0],
+          "raw_score": [4.5, 6.5]
+        },
+        "atos_estimated": {
+          "estimated_grade_level": [0.0, 2.0],
+          "raw_score": [0.0, 2.0]
+        },
+        "lexile_estimated": {
+          "estimated_grade_level": [0.0, 3.0],
+          "raw_score": [150.0, 350.0]
+        }
+      },
+      "aggregate_grade": [0.0, 6.0]
+    },
+    {
+      "id": "middle_school",
+      "text": "Photosynthesis lets plants make food from sunlight. Chlorophyll in the leaves captures light energy. The process also releases oxygen into the air.",
+      "frameworks": {
+        "flesch_kincaid": {
+          "estimated_grade_level": [6.0, 10.0],
+          "raw_score": [6.0, 10.0]
+        },
+        "dale_chall": {
+          "estimated_grade_level": [10.0, 16.0],
+          "raw_score": [8.0, 12.0]
+        },
+        "atos_estimated": {
+          "estimated_grade_level": [5.0, 9.0],
+          "raw_score": [5.0, 9.0]
+        },
+        "lexile_estimated": {
+          "estimated_grade_level": [6.0, 10.0],
+          "raw_score": [900.0, 1100.0]
+        }
+      },
+      "aggregate_grade": [7.0, 12.0]
+    },
+    {
+      "id": "complex_college",
+      "text": "The multifaceted ramifications of macroeconomic policy interventions necessitate comprehensive interdisciplinary analysis before implementation across heterogeneous institutional environments.",
+      "frameworks": {
+        "flesch_kincaid": {
+          "estimated_grade_level": [30.0, 40.0],
+          "raw_score": [30.0, 40.0]
+        },
+        "dale_chall": {
+          "estimated_grade_level": [12.0, 16.0],
+          "raw_score": [14.0, 18.0]
+        },
+        "atos_estimated": {
+          "estimated_grade_level": [18.0, 26.0],
+          "raw_score": [18.0, 26.0]
+        },
+        "lexile_estimated": {
+          "estimated_grade_level": [14.0, 17.0],
+          "raw_score": [1250.0, 1300.0]
+        }
+      },
+      "aggregate_grade": [18.0, 26.0]
+    }
+  ],
+  "ordering": {
+    "simple_id": "simple_elementary",
+    "complex_id": "complex_college",
+    "framework": "flesch_kincaid"
+  }
+}
