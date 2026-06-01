@@ -4,27 +4,52 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lexara"
-version = "0.1.0"
-description = "Lexara — rewrite to target grade API + Python SDK"
+version = "0.1.0a1"
+description = "Reading level scoring and rewrite API for edtech"
 readme = "README.md"
-requires-python = ">=3.10"
-license = { text = "Proprietary" }
-authors = [{ name = "Lexara" }]
-dependencies = [
-    "fastapi>=0.110",
-    "uvicorn[standard]>=0.29",
-    "pydantic>=2.6",
-    "pydantic-settings>=2.2",
-    "httpx>=0.27",
+requires-python = ">=3.9"
+license = {file = "LICENSE.txt"}
+authors = [{name = "Chanel Johnson", email = "chanel_johnson@alumni.brown.edu"}]
+keywords = ["edtech", "readability", "nlp", "education", "ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Education",
+    "Topic :: Text Processing :: Linguistic",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 
+# Minimal SDK dependencies — only what a consumer needs.
+# Server and dev dependencies are in optional extras below.
+dependencies = [
+    "httpx>=0.24",
+    "pydantic>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ChanelYJ19/lexara"
+Documentation = "https://github.com/ChanelYJ19/lexara#readme"
+
 [project.optional-dependencies]
+# Server: run the Lexara API locally
+server = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "pydantic-settings>=2.2",
+]
+# Real LLM provider
+openai = ["openai>=1.30"]
+# Development and testing
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
+    "httpx>=0.24",
 ]
-# Real providers live behind optional extras so the core install stays light.
-openai = ["openai>=1.30"]
 
 [project.scripts]
 lexara-api = "lexara.api.app:run"
