@@ -14,3 +14,4 @@ env/
 .coverage
 htmlcov/
 .DS_Store
+lexara.db

@@ -11,6 +11,7 @@ from fastapi import Request
 
 from lexara.api.errors import AuthenticationError
 from lexara.config import Settings
+from lexara.db.models import User
 from lexara.services.rewrite_service import RewriteService
 from lexara.services.scoring_service import ScoringService
 
@@ -28,18 +29,30 @@ def get_rewrite_service(request: Request) -> RewriteService:
 
 
 def require_api_key(request: Request) -> str:
-    """API-key auth (v1 stub).
+    """Authenticate via Bearer token or x-api-key header.
 
-    Accepts ``Authorization: Bearer <key>`` or ``x-api-key: <key>`` and checks
-    membership against the configured key list. Swap this for a real key store /
-    rate limiter later without touching routes.
+    Checks in order:
+    1. LEXARA_API_KEYS in settings (env / .env file — always works for local dev).
+    2. api_key column in the users table (DB-registered keys).
     """
     settings: Settings = request.app.state.settings
     api_key = _extract_key(request)
-    if not api_key or api_key not in settings.api_keys:
-        raise AuthenticationError(
-            "API key required. Get yours free at /signup"
-        )
+    if not api_key:
+        raise AuthenticationError("API key required. Get yours free at /signup")
+
+    if api_key in settings.api_keys:
+        request.state.api_key = api_key
+        return api_key
+
+    db = request.app.state.db_session_factory()
+    try:
+        user = db.query(User).filter(User.api_key == api_key).first()
+    finally:
+        db.close()
+
+    if user is None:
+        raise AuthenticationError("API key required. Get yours free at /signup")
+
     request.state.api_key = api_key
     return api_key
 

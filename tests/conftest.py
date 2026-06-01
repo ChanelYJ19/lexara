@@ -11,7 +11,12 @@ API_KEY = "test-key"
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(api_keys=[API_KEY], llm_provider="mock", log_level="WARNING")
+    return Settings(
+        api_keys=[API_KEY],
+        llm_provider="mock",
+        log_level="WARNING",
+        database_url="sqlite:///:memory:",
+    )
 
 
 @pytest.fixture

@@ -8,6 +8,8 @@ from lexara.api.errors import register_exception_handlers
 from lexara.api.middleware import RequestContextMiddleware
 from lexara.api.routes import health, readability, signup, usage
 from lexara.config import Settings, get_settings
+from lexara.db.models import Base
+from lexara.db.session import make_engine, make_session_factory
 from lexara.logging_config import configure_logging, get_logger
 from lexara.rewriting.providers import build_provider
 from lexara.scoring.registry import get_registry
@@ -46,7 +48,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Singletons live on app.state and are injected via dependencies.
     scoring_service = ScoringService(registry=get_registry())
     provider = build_provider(settings)
+    engine = make_engine(settings.database_url)
+    Base.metadata.create_all(engine)
     app.state.settings = settings
+    app.state.db_session_factory = make_session_factory(engine)
     app.state.scoring_service = scoring_service
     app.state.rewrite_service = RewriteService(provider, scoring_service)
 

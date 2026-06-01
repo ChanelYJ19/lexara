@@ -1,9 +1,13 @@
-"""Signup stubs — no auth required."""
+"""Signup endpoints — no auth required."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter
-from pydantic import BaseModel, EmailStr, Field
+import secrets
+
+from fastapi import APIRouter, Request
+from pydantic import BaseModel, Field
+
+from lexara.db.models import User
 
 router = APIRouter(tags=["signup"])
 
@@ -15,19 +19,39 @@ class SignupRequest(BaseModel):
 class SignupResponse(BaseModel):
     message: str
     email: str
+    api_key: str
 
 
 @router.get("/signup", summary="Signup page (stub)")
 def signup_page() -> dict:
     return {
         "message": "Lexara alpha access",
-        "instructions": "POST /signup with {\"email\": \"you@example.com\"} to request an API key.",
+        "instructions": 'POST /signup with {"email": "you@example.com"} to get an API key.',
     }
 
 
 @router.post("/signup", response_model=SignupResponse, summary="Request alpha access")
-def signup(payload: SignupRequest) -> SignupResponse:
+def signup(payload: SignupRequest, request: Request) -> SignupResponse:
+    db = request.app.state.db_session_factory()
+    try:
+        existing = db.query(User).filter(User.email == payload.email).first()
+        if existing:
+            return SignupResponse(
+                message="Welcome back! Use your existing API key.",
+                email=existing.email,
+                api_key=existing.api_key,
+            )
+        user = User(
+            email=payload.email,
+            api_key=secrets.token_hex(32),
+        )
+        db.add(user)
+        db.commit()
+    finally:
+        db.close()
+
     return SignupResponse(
-        message="Thanks! We'll send your API key to this address shortly.",
-        email=payload.email,
+        message="You're in! Use the api_key below in your Authorization header.",
+        email=user.email,
+        api_key=user.api_key,
     )

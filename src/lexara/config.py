@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     openai_max_completion_tokens: int = 4096
     log_level: str = "INFO"
     max_rewrite_passes: int = 5
+    database_url: str = "sqlite:///./lexara.db"
 
     @field_validator("api_keys", mode="before")
     @classmethod
