@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 from lexara.api.errors import register_exception_handlers
 from lexara.api.middleware import RequestContextMiddleware
-from lexara.api.routes import health, readability
+from lexara.api.routes import health, readability, signup, usage
 from lexara.config import Settings, get_settings
 from lexara.logging_config import configure_logging, get_logger
 from lexara.rewriting.providers import build_provider
@@ -54,6 +54,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
 
     app.include_router(health.router)
+    app.include_router(signup.router)
+    app.include_router(usage.router)
     app.include_router(readability.router)
 
     logger.info(

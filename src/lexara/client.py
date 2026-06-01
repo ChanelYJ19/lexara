@@ -203,15 +203,21 @@ class LexaraClient:
     @staticmethod
     def _raise(resp: httpx.Response) -> None:
         try:
-            body = resp.json().get("error", {})
+            payload = resp.json()
         except Exception:  # noqa: BLE001
-            body = {}
-        raise_for_response(
-            resp.status_code,
-            body.get("code", "error"),
-            body.get("message", resp.text),
-            body.get("details"),
-        )
+            payload = {}
+        error_field = payload.get("error", {})
+        if isinstance(error_field, dict):
+            # Nested envelope: {"error": {"code": "...", "message": "..."}}
+            code = error_field.get("code", "error")
+            message = error_field.get("message", resp.text)
+            details = error_field.get("details")
+        else:
+            # Flat 401 shape: {"error": "unauthorized", "message": "..."}
+            code = str(error_field) if error_field else "error"
+            message = payload.get("message", resp.text)
+            details = None
+        raise_for_response(resp.status_code, code, message, details)
 
     def close(self) -> None:
         self._http.close()

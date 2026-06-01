@@ -12,7 +12,7 @@ def test_health_is_public(client):
 def test_score_requires_api_key(client):
     resp = client.post("/v1/readability/score", json={"text": TEXT})
     assert resp.status_code == 401
-    assert resp.json()["error"]["code"] == "unauthorized"
+    assert resp.json()["error"] == "unauthorized"
 
 
 def test_score_rejects_bad_key(client):

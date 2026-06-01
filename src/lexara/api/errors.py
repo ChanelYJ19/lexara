@@ -48,6 +48,14 @@ def _envelope(status_code: int, code: str, message: str, details: dict | None):
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(AuthenticationError)
+    async def _handle_auth(_: Request, exc: AuthenticationError):
+        # Flat shape intentional — matches documented 401 contract.
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": "unauthorized", "message": exc.message},
+        )
+
     @app.exception_handler(LexaraError)
     async def _handle_lexara(_: Request, exc: LexaraError):
         return _envelope(exc.status_code, exc.code, exc.message, exc.details)

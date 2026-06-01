@@ -36,10 +36,10 @@ def require_api_key(request: Request) -> str:
     """
     settings: Settings = request.app.state.settings
     api_key = _extract_key(request)
-    if not api_key:
-        raise AuthenticationError("Missing API key.")
-    if api_key not in settings.api_keys:
-        raise AuthenticationError("Invalid API key.")
+    if not api_key or api_key not in settings.api_keys:
+        raise AuthenticationError(
+            "API key required. Get yours free at /signup"
+        )
     request.state.api_key = api_key
     return api_key
 
